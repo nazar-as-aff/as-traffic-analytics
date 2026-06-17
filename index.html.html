@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Traffic Meta — AS Talent Agency</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{--bg:#f5f6f8;--white:#fff;--border:#e4e7ec;--bl:#f0f2f5;--t1:#101828;--t2:#475467;--t3:#98a2b3;--ac:#1570ef;--acbg:#eff4ff;--gr:#067647;--grbg:#ecfdf3;--rd:#b42318;--rdbg:#fef3f2;--am:#b54708;--ambg:#fffaeb;--rsm:8px;--rmd:12px;--sh:0 1px 3px rgba(16,24,40,.06);}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--t1);font-size:14px;line-height:1.5;}
+.hdr{background:var(--white);border-bottom:1px solid var(--border);padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;}
+.hdr-l{display:flex;align-items:center;gap:12px;}
+.logo{font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--ac);}
+.sep{width:1px;height:16px;background:var(--border);}
+.upd{font-size:11px;color:var(--t3);background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:2px 10px;}
+.sbadge{font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px;}
+.sm{background:#e7f0ff;color:#1557b0;}.so{background:#f4f3ff;color:#5b21b6;}
+.main{max-width:1320px;margin:0 auto;padding:20px 24px 60px;}
+.page-h h1{font-size:18px;font-weight:600;margin-bottom:2px;}
+.page-h p{font-size:12px;color:var(--t2);margin-bottom:16px;}
+.tabs{display:flex;gap:1px;background:var(--border);border-radius:var(--rsm);padding:3px;margin-bottom:18px;width:fit-content;border:1px solid var(--border);}
+.tab{font-size:13px;font-weight:500;padding:5px 14px;border:none;border-radius:6px;background:transparent;color:var(--t2);cursor:pointer;white-space:nowrap;}
+.tab.active{background:var(--white);color:var(--t1);box-shadow:var(--sh);}
+.tab-c{display:none;}.tab-c.active{display:block;}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px;}
+.kpi{background:var(--white);border:1px solid var(--border);border-radius:var(--rmd);padding:12px 14px;box-shadow:var(--sh);}
+.kpi-l{font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--t3);margin-bottom:4px;}
+.kpi-v{font-size:20px;font-weight:700;line-height:1.15;margin-bottom:2px;}
+.kpi-s{font-size:11px;color:var(--t2);}
+.con{margin-bottom:18px;}
+.con-hdr{display:flex;align-items:center;gap:10px;margin-bottom:8px;padding:9px 14px;background:var(--white);border:1px solid var(--border);border-radius:var(--rmd);box-shadow:var(--sh);}
+.cbadge{font-size:11px;font-weight:700;letter-spacing:.04em;padding:3px 12px;border-radius:20px;flex-shrink:0;}
+.cbd-td{background:#ecfdf3;color:#067647;}.cbd-vl{background:#eff4ff;color:#1570ef;}
+.con-n{font-size:13px;font-weight:600;outline:none;border-bottom:1px dashed transparent;min-width:40px;max-width:220px;}
+.con-n:focus{border-color:var(--ac);border-style:solid;}
+.con-meta{font-size:12px;color:var(--t2);}
+.con-stat{font-size:12px;color:var(--t2);margin-left:auto;}
+.con-stat b{color:var(--t1);}
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--rmd);box-shadow:var(--sh);margin-bottom:12px;overflow:hidden;}
+.card-hdr{padding:11px 16px;border-bottom:1px solid var(--bl);display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.card-t{font-size:13px;font-weight:600;}.card-s{font-size:11px;color:var(--t2);}
+.tbl{width:100%;border-collapse:collapse;}
+.tbl th{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--t3);padding:8px 10px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--border);}
+.tbl th.thl{text-align:left;padding-left:16px;}
+.tbl td{padding:9px 10px;text-align:right;border-bottom:1px solid var(--bl);font-size:13px;vertical-align:middle;}
+.tbl td.tdl{text-align:left;padding-left:16px;font-weight:500;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl tbody tr:hover td{background:#fafbfc;}
+.tbl .tr-tot td{background:var(--bg);font-weight:700;border-top:1.5px solid var(--border);}
+.tbl .tr-tot td.tdl{color:var(--t2);}
+.thw{display:inline-flex;align-items:center;gap:3px;}
+.tip-i{display:inline-flex;align-items:center;justify-content:center;width:13px;height:13px;border-radius:50%;background:var(--bl);color:var(--t3);font-size:9px;font-weight:700;cursor:help;border:1px solid var(--border);}
+.tip-box{display:none;position:fixed;background:#1e293b;color:#e2e8f0;font-size:11px;border-radius:7px;padding:8px 11px;width:210px;line-height:1.55;z-index:9999;box-shadow:0 6px 18px rgba(0,0,0,.3);pointer-events:none;}
+.status{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;cursor:pointer;border:none;outline:none;}
+.st-a{background:var(--grbg);color:var(--gr);}.st-t{background:var(--ambg);color:var(--am);}.st-s{background:var(--rdbg);color:var(--rd);}
+.st-dot{width:5px;height:5px;border-radius:50%;}
+.st-a .st-dot{background:#17b26a;}.st-t .st-dot{background:#f79009;}.st-s .st-dot{background:#f04438;}
+.badge{display:inline-flex;font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;}
+.b-g{background:var(--grbg);color:var(--gr);}.b-r{background:var(--rdbg);color:var(--rd);}
+.b-a{background:var(--ambg);color:var(--am);}.b-b{background:var(--acbg);color:var(--ac);}
+.b-p{background:#f4f3ff;color:#6941c6;}
+.mn{display:flex;align-items:center;gap:7px;}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.bar-w{display:flex;align-items:center;justify-content:flex-end;gap:5px;}
+.bar-bg{height:4px;background:var(--bl);border-radius:2px;width:52px;flex-shrink:0;}
+.bar-f{height:4px;border-radius:2px;}
+.na{color:var(--t3);}
+.bg-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-bottom:16px;}
+.bg-row{background:var(--white);border:1px solid var(--border);border-radius:var(--rmd);padding:11px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;box-shadow:var(--sh);}
+.inp-w{display:flex;}
+.inp-pre{font-size:13px;color:var(--t2);padding:5px 7px 5px 10px;background:var(--bg);border:1px solid var(--border);border-right:none;border-radius:var(--rsm) 0 0 var(--rsm);}
+.inp{font-size:13px;font-weight:600;width:84px;padding:5px 8px;border:1px solid var(--border);border-left:none;border-radius:0 var(--rsm) var(--rsm) 0;background:var(--white);color:var(--t1);outline:none;text-align:right;}
+.btn{font-size:13px;font-weight:500;padding:6px 14px;border-radius:var(--rsm);border:none;cursor:pointer;}
+.btn-p{background:var(--ac);color:#fff;}.btn-g{background:transparent;color:var(--t2);border:1px solid var(--border);}
+.mc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin-bottom:20px;}
+.mc{background:var(--white);border:1px solid var(--border);border-radius:var(--rmd);padding:14px;cursor:pointer;box-shadow:var(--sh);transition:border-color .15s,transform .15s;}
+.mc:hover{border-color:var(--ac);transform:translateY(-2px);}
+.mc-name{font-size:13px;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.mc-row{display:flex;justify-content:space-between;font-size:11px;color:var(--t2);margin-bottom:4px;}
+.mc-val{font-weight:600;color:var(--t1);}
+.mc-msgs{display:flex;align-items:center;gap:4px;font-size:11px;margin-top:8px;padding-top:8px;border-top:1px solid var(--bl);color:var(--t2);}
+.mc-msgs-val{font-weight:700;color:#6941c6;}
+.mdot{width:6px;height:6px;border-radius:50%;background:#6941c6;flex-shrink:0;}
+.chart-split{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.chart-wrap{position:relative;height:200px;}
+.bar-item{margin-bottom:10px;}
+.bar-label{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;}
+.bar-track{height:8px;background:var(--bl);border-radius:4px;}
+.bar-fill{height:8px;border-radius:4px;transition:width .4s;}
+.pov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:500;align-items:center;justify-content:center;}
+.pov.open{display:flex;}
+.panel{background:var(--white);border-radius:16px;width:92%;max-width:1020px;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.22);}
+.p-hdr{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.p-title{font-size:15px;font-weight:600;}
+.p-close{font-size:20px;color:var(--t3);cursor:pointer;border:none;background:transparent;padding:2px 8px;line-height:1;}
+.p-body{overflow-y:auto;padding:20px;flex:1;}
+.p-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;}
+.p-charts{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;}
+.pcc{background:var(--bg);border-radius:var(--rmd);padding:14px;}
+.pcc-title{font-size:12px;font-weight:600;color:var(--t2);margin-bottom:12px;}
+.pcc-wrap{position:relative;height:180px;}
+.geo-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:12px;}
+.geo-c{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.fr-kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:14px;}
+.bot-bar{height:6px;background:var(--bl);border-radius:3px;margin-top:4px;}
+.bot-bar-f{height:6px;border-radius:3px;background:linear-gradient(90deg,#f04438,#fda29b);}
+.fr-filter-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:10px 14px;border-bottom:1px solid var(--bl);}
+.fr-filter-row .lbl{font-size:11px;color:var(--t3);font-weight:600;}
+.fr-btn{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;border:1px solid var(--border);background:var(--white);color:var(--t2);cursor:pointer;}
+.fr-btn.active{background:var(--t1);color:#fff;border-color:var(--t1);}
+.fr-btn.f-ok.active{background:var(--gr);border-color:var(--gr);}
+.fr-btn.f-bot.active{background:var(--rd);border-color:var(--rd);}
+.fr-tbl{width:100%;border-collapse:collapse;font-size:12px;}
+.fr-tbl th{font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--t3);padding:7px 10px;text-align:left;border-bottom:1px solid var(--border);background:var(--bg);}
+.fr-tbl td{padding:7px 10px;border-bottom:1px solid var(--bl);vertical-align:middle;}
+.fr-tbl tbody tr.is-bot{background:#fff8f8;}
+.fr-ok{display:inline-flex;font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;background:var(--grbg);color:var(--gr);}
+.fr-bot{display:inline-flex;font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;background:var(--rdbg);color:var(--rd);}
+.fr-ip{font-family:monospace;font-size:11px;color:var(--t3);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.fr-ua{max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--t2);font-size:11px;}
+.fr-time{color:var(--t3);font-size:11px;white-space:nowrap;}
+.chat-form-area{background:var(--white);border:1px solid var(--border);border-radius:var(--rmd);padding:16px;margin-bottom:16px;box-shadow:var(--sh);}
+.chat-form-area textarea{width:100%;min-height:160px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--rsm);font-family:inherit;font-size:13px;color:var(--t1);resize:vertical;outline:none;line-height:1.5;}
+.chat-form-area textarea:focus{border-color:var(--ac);}
+.chat-entries{display:flex;flex-direction:column;gap:12px;}
+.chat-entry{background:var(--white);border:1px solid var(--border);border-radius:var(--rmd);overflow:hidden;box-shadow:var(--sh);}
+.ce-hdr{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--bl);background:var(--bg);}
+.ce-title{font-size:13px;font-weight:600;flex:1;}.ce-date{font-size:11px;color:var(--t3);}
+.ce-body{padding:14px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+.ce-kpi{text-align:center;padding:10px;background:var(--bg);border-radius:var(--rsm);}
+.ce-kpi-v{font-size:18px;font-weight:700;line-height:1.2;}
+.ce-kpi-l{font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--t3);margin-top:3px;}
+.ce-fans{padding:0 14px 14px;}
+.ce-fan-row{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--bl);font-size:12px;}
+.ce-fan-row:last-child{border-bottom:none;}
+.ce-fan-tag{flex-shrink:0;font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;white-space:nowrap;}
+.tag-cold{background:#f0f9ff;color:#0369a1;}.tag-warm{background:#fff7ed;color:#c2410c;}
+.tag-hot{background:#ecfdf5;color:#065f46;}.tag-lost{background:#fef2f2;color:#991b1b;}
+.tag-ppv{background:#faf5ff;color:#6b21a8;}.tag-cross{background:#fef9c3;color:#92400e;}
+.chat-summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:16px;}
+.insight-box{border-left:3px solid var(--ac);background:var(--acbg);border-radius:0 var(--rsm) var(--rsm) 0;padding:10px 14px;font-size:12px;margin-bottom:8px;}
+.insight-box.warn{border-color:#f59e0b;background:#fffbeb;}
+.insight-box.good{border-color:var(--gr);background:var(--grbg);}
+.insight-box.bad{border-color:var(--rd);background:var(--rdbg);}
+.divider{height:1px;background:var(--bl);margin:14px 0;}
+.sec-lbl{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);margin-bottom:8px;}
+.info-box{background:var(--acbg);border-radius:var(--rmd);padding:11px 14px;font-size:12px;color:#1557b0;margin-top:8px;}
+.note{font-size:11px;color:var(--t3);margin-top:8px;padding:9px 12px;background:var(--bg);border-radius:var(--rsm);}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--t1);color:#fff;padding:8px 16px;border-radius:var(--rsm);font-size:13px;font-weight:500;opacity:0;transition:all .2s;z-index:9999;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+@media(max-width:900px){.main{padding:14px 12px 60px;}.chart-split,.p-charts,.p-kpis{grid-template-columns:1fr 1fr;}.kpi-row{grid-template-columns:repeat(2,1fr);}.panel{width:98%;max-height:94vh;}}
+</style>
+</head>
+<body>
+<header class="hdr">
+  <div class="hdr-l">
+    <span class="logo">AS TALENT</span>
+    <div class="sep"></div>
+    <span style="font-size:14px;font-weight:600;">Traffic Meta</span>
+    <span class="upd">16 червня 2026 · 4 TD + 5 VL</span>
+  </div>
+  <div style="display:flex;gap:6px;align-items:center;">
+    <span class="sbadge sm">Meta Ads</span>
+    <span class="sbadge so">OnlyFans Smart Links</span>
+  </div>
+</header>
+<main class="main">
+  <div class="page-h">
+    <h1>Traffic Meta Dashboard</h1>
+    <p>Smart Links OF API (актуальні) &middot; Бюджет Meta — ручне введення &middot; Розбивка по підрядниках</p>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="go('overview',this)">Огляд</button>
+    <button class="tab" onclick="go('budget',this)">Бюджет Meta</button>
+    <button class="tab" onclick="go('analytics',this)">Аналітика моделей</button>
+    <button class="tab" onclick="go('charts',this)">Графіки</button>
+    <button class="tab" onclick="go('fraud',this)">&#x1F6E1; Антифрод</button>
+    <button class="tab" onclick="go('chat',this)">&#x1F4AC; Чат аналіз</button>
+  </div>
+  <!-- OVERVIEW -->
+  <div id="t-overview" class="tab-c active">
+    <div class="kpi-row" id="kpiRow"></div>
+    <div class="con">
+      <div class="con-hdr">
+        <span class="cbadge cbd-td">TD</span>
+        <span class="con-n" id="name-td" contenteditable spellcheck="false" onblur="saveName('td')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}">Traffic Devils</span>
+        <span class="con-meta">4 моделі &middot; Smart Links OF API</span>
+        <span class="con-stat" id="tdStat"></span>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><div class="card-t" id="ct-td">Smart Links &middot; Traffic Devils</div><div class="card-s">Кліки, підписки, CR%, Fans 3+ msg — прямо з API</div></div>
+        <div style="overflow-x:auto;"><table class="tbl"><thead><tr id="th-td"></tr></thead><tbody id="tdBody"></tbody></table></div>
+      </div>
+    </div>
+    <div class="con">
+      <div class="con-hdr">
+        <span class="cbadge cbd-vl">VL</span>
+        <span class="con-n" id="name-vl" contenteditable spellcheck="false" onblur="saveName('vl')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}">Vasyl Lev</span>
+        <span class="con-meta">5 моделей &middot; Smart Links OF API</span>
+        <span class="con-stat" id="vlStat"></span>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><div class="card-t" id="ct-vl">Smart Links &middot; Vasyl Lev</div><div class="card-s">Кліки, підписки, CR%, Fans 3+ msg — прямо з API</div></div>
+        <div style="overflow-x:auto;"><table class="tbl"><thead><tr id="th-vl"></tr></thead><tbody id="vlBody"></tbody></table></div>
+      </div>
+    </div>
+    <p class="note">&#x26A1; Дані прямо з OF API. CPC &middot; CPF &middot; ROAS — на основі Spend Meta.</p>
+  </div>
+  <!-- BUDGET -->
+  <div id="t-budget" class="tab-c">
+    <div class="card">
+      <div class="card-hdr">
+        <div><div class="card-t">Бюджет Meta Ads — ручне введення</div><div class="card-s">Вносити з Meta Ads Manager. Зберігається у браузері.</div></div>
+        <div style="display:flex;gap:8px;"><button class="btn btn-g" onclick="resetBudget()">Скинути</button><button class="btn btn-p" onclick="saveBudget()">Зберегти</button></div>
+      </div>
+      <div style="padding:16px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;"><span class="cbadge cbd-td">TD</span><span class="sec-lbl" style="margin:0;" id="bl-td">Traffic Devils — Spend ($)</span></div>
+        <div class="bg-grid" id="bgTD"></div>
+        <div class="divider"></div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;"><span class="cbadge cbd-vl">VL</span><span class="sec-lbl" style="margin:0;" id="bl-vl">Vasyl Lev — Spend ($)</span></div>
+        <div class="bg-grid" id="bgVL"></div>
+        <div class="info-box"><strong>Як внести:</strong> Meta Ads Manager &#x2192; Spend за потрібний період &#x2192; введіть &#x2192; «Зберегти».</div>
+      </div>
+    </div>
+  </div>
+  <!-- ANALYTICS -->
+  <div id="t-analytics" class="tab-c">
+    <div class="kpi-row" style="margin-bottom:16px;">
+      <div class="kpi"><div class="kpi-l">Кліків</div><div class="kpi-v" id="an-cl">—</div><div class="kpi-s">9 Smart Links</div></div>
+      <div class="kpi"><div class="kpi-l">Підписок</div><div class="kpi-v" id="an-su">—</div><div class="kpi-s">всі лінки</div></div>
+      <div class="kpi"><div class="kpi-l">Avg CR%</div><div class="kpi-v" id="an-cr">—</div><div class="kpi-s">портфель</div></div>
+      <div class="kpi"><div class="kpi-l">Fans 3+ msg</div><div class="kpi-v" id="an-ms" style="color:#6941c6">—</div><div class="kpi-s">залучені фани</div></div>
+    </div>
+    <div style="margin-bottom:4px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:8px 14px;background:var(--white);border:1px solid var(--border);border-radius:var(--rmd);">
+        <span class="cbadge cbd-td">TD</span><span id="anTDlbl" style="font-size:12px;color:var(--t2);">Traffic Devils</span>
+        <span style="font-size:11px;color:var(--t3);margin-left:8px;">Натисніть на модель — гео, девайси</span>
+      </div>
+      <div class="mc-grid" id="mcTD"></div>
+    </div>
+    <div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:8px 14px;background:var(--white);border:1px solid var(--border);border-radius:var(--rmd);">
+        <span class="cbadge cbd-vl">VL</span><span id="anVLlbl" style="font-size:12px;color:var(--t2);">Vasyl Lev</span>
+        <span style="font-size:11px;color:var(--t3);margin-left:8px;">Натисніть на модель — гео, девайси</span>
+      </div>
+      <div class="mc-grid" id="mcVL"></div>
+    </div>
+  </div>
+  <!-- CHARTS -->
+  <div id="t-charts" class="tab-c">
+    <div class="chart-split" style="margin-bottom:4px;">
+      <div class="card"><div class="card-hdr"><div class="card-t">CR% &middot; Traffic Devils</div><span class="cbadge cbd-td">TD</span></div><div style="padding:14px;"><div class="chart-wrap"><canvas id="cCR_td"></canvas></div></div></div>
+      <div class="card"><div class="card-hdr"><div class="card-t">CR% &middot; Vasyl Lev</div><span class="cbadge cbd-vl">VL</span></div><div style="padding:14px;"><div class="chart-wrap"><canvas id="cCR_vl"></canvas></div></div></div>
+    </div>
+    <div class="chart-split" style="margin-bottom:4px;">
+      <div class="card"><div class="card-hdr"><div class="card-t">Підписки &middot; Traffic Devils</div></div><div style="padding:14px;"><div class="chart-wrap"><canvas id="cSubs_td"></canvas></div></div></div>
+      <div class="card"><div class="card-hdr"><div class="card-t">Підписки &middot; Vasyl Lev</div></div><div style="padding:14px;"><div class="chart-wrap"><canvas id="cSubs_vl"></canvas></div></div></div>
+    </div>
+    <div class="chart-split">
+      <div class="card"><div class="card-hdr"><div class="card-t">Fans 3+ msg &middot; Traffic Devils</div></div><div style="padding:16px;" id="msgs_td_chart"></div></div>
+      <div class="card"><div class="card-hdr"><div class="card-t">Fans 3+ msg &middot; Vasyl Lev</div></div><div style="padding:16px;" id="msgs_vl_chart"></div></div>
+    </div>
+    <div class="chart-split">
+      <div class="card">
+        <div class="card-hdr"><div class="card-t">Актуальність &middot; Traffic Devils</div><div class="card-s">Дата старту та стоп по кожній моделі</div></div>
+        <div style="padding:14px;" id="act_td"></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><div class="card-t">Актуальність &middot; Vasyl Lev</div><div class="card-s">Дата старту та стоп по кожній моделі</div></div>
+        <div style="padding:14px;" id="act_vl"></div>
+      </div>
+    </div>
+  </div>
+  <!-- FRAUD -->
+  <div id="t-fraud" class="tab-c">
+    <div class="fr-kpi-grid" id="fraudKPIs"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+      <div class="card"><div class="card-hdr"><div class="card-t">Traffic Devils &middot; Фрод</div><span class="cbadge cbd-td">TD</span></div><div style="padding:14px;" id="fraudBarsTD"></div></div>
+      <div class="card"><div class="card-hdr"><div class="card-t">Vasyl Lev &middot; Фрод</div><span class="cbadge cbd-vl">VL</span></div><div style="padding:14px;" id="fraudBarsVL"></div></div>
+    </div>
+    <div class="card" style="margin-bottom:14px;">
+      <div class="card-hdr"><div class="card-t">Типи ботів по підрядниках</div></div>
+      <div style="padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:20px;" id="fraudBotTypes"></div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><div><div class="card-t">Лог кліків &middot; Антифрод</div><div class="card-s">listSmartLinkClicks &middot; всі 9 Smart Links</div></div><span id="fraudCount" style="font-size:12px;color:var(--t2);"></span></div>
+      <div class="fr-filter-row">
+        <span class="lbl">Підрядник:</span>
+        <button class="fr-btn active" data-ftype="con" data-fval="all" onclick="setFF(this)">Всі</button>
+        <button class="fr-btn" data-ftype="con" data-fval="TD" onclick="setFF(this)">TD</button>
+        <button class="fr-btn" data-ftype="con" data-fval="VL" onclick="setFF(this)">VL</button>
+        <span class="lbl" style="margin-left:8px;">Модель:</span>
+        <button class="fr-btn active" data-ftype="model" data-fval="all" onclick="setFF(this)">Всі</button>
+        <button class="fr-btn" data-ftype="model" data-fval="Octokura" onclick="setFF(this)">Octokura</button>
+        <button class="fr-btn" data-ftype="model" data-fval="Nancy Ace" onclick="setFF(this)">Nancy Ace</button>
+        <button class="fr-btn" data-ftype="model" data-fval="Ellie Bird" onclick="setFF(this)">Ellie Bird</button>
+        <button class="fr-btn" data-ftype="model" data-fval="Chloe Temple" onclick="setFF(this)">Chloe</button>
+        <button class="fr-btn" data-ftype="model" data-fval="Jennifer White" onclick="setFF(this)">Jennifer</button>
+        <button class="fr-btn" data-ftype="model" data-fval="Amanda Essen" onclick="setFF(this)">Amanda</button>
+        <button class="fr-btn" data-ftype="model" data-fval="Emiri Momota" onclick="setFF(this)">Emiri</button>
+        <span class="lbl" style="margin-left:8px;">Статус:</span>
+        <button class="fr-btn f-ok active" data-ftype="status" data-fval="all" onclick="setFF(this)">Всі</button>
+        <button class="fr-btn f-ok" data-ftype="status" data-fval="ok" onclick="setFF(this)">&#x2713; Ok</button>
+        <button class="fr-btn f-bot" data-ftype="status" data-fval="bot" onclick="setFF(this)">&#x26A0; Bot</button>
+        <span class="lbl" style="margin-left:8px;">Девайс:</span>
+        <button class="fr-btn active" data-ftype="device" data-fval="all" onclick="setFF(this)">Всі</button>
+        <button class="fr-btn" data-ftype="device" data-fval="Mobile" onclick="setFF(this)">&#x1F4F1; Mobile</button>
+        <button class="fr-btn" data-ftype="device" data-fval="Desktop" onclick="setFF(this)">&#x1F4BB; Desktop</button>
+        <button class="fr-btn f-bot" data-ftype="device" data-fval="Bot" onclick="setFF(this)">&#x1F916; Bot</button>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="fr-tbl"><thead><tr><th>Час</th><th>Підрядник</th><th>Модель</th><th>IP Address</th><th>User Agent</th><th>Click ID</th><th>Країна</th><th>Девайс</th><th style="text-align:center;">Clicks</th><th>Fraud</th></tr></thead><tbody id="fraudTbody"></tbody></table>
+      </div>
+      <div style="padding:10px 16px;border-top:1px solid var(--bl);display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-size:12px;color:var(--t3);" id="fraudPag"></span>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-g" style="padding:4px 12px;font-size:12px;" onclick="fraudChangePage(-1)">&#x2190; Назад</button>
+          <button class="btn btn-g" style="padding:4px 12px;font-size:12px;" onclick="fraudChangePage(1)">Далі &#x2192;</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- CHAT -->
+  <div id="t-chat" class="tab-c">
+    <div class="chat-summary-grid" id="chatSummaryKPIs"></div>
+    <div id="chatInsights" style="margin-bottom:16px;"></div>
+    <div class="chat-form-area" style="margin-bottom:16px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div>
+          <div style="font-size:13px;font-weight:600;">&#x2795; Вставте зведений звіт від чатерів</div>
+          <div style="font-size:11px;color:var(--t3);margin-top:2px;">Вставляйте весь текст — система автоматично розбере по моделях і підрядниках</div>
+        </div>
+        <input id="chatDateInput" type="date" style="font-size:12px;padding:4px 8px;border:1px solid var(--border);border-radius:var(--rsm);background:var(--white);color:var(--t1);outline:none;">
+      </div>
+      <textarea id="chatRawInput" placeholder="Вставте звіт чатера"></textarea>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;">
+        <button class="btn btn-g" onclick="document.getElementById('chatRawInput').value=''">Очистити</button>
+        <button class="btn btn-p" onclick="parseBulkChat()">Розібрати</button>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+      <span style="font-size:11px;color:var(--t3);font-weight:600;">Підрядник:</span>
+      <button class="fr-btn active" data-cf="con" data-cv="all" onclick="setChatFilter(this)">Всі</button>
+      <button class="fr-btn" data-cf="con" data-cv="TD" onclick="setChatFilter(this)">TD</button>
+      <button class="fr-btn" data-cf="con" data-cv="VL" onclick="setChatFilter(this)">VL</button>
+      <span style="font-size:11px;color:var(--t3);font-weight:600;margin-left:8px;">Модель:</span>
+      <button class="fr-btn active" data-cf="model" data-cv="all" onclick="setChatFilter(this)">Всі</button>
+      <button class="fr-btn" data-cf="model" data-cv="Nancy Ace" onclick="setChatFilter(this)">Nancy Ace</button>
+      <button class="fr-btn" data-cf="model" data-cv="Jennifer White" onclick="setChatFilter(this)">Jennifer</button>
+      <button class="fr-btn" data-cf="model" data-cv="Chloe Temple" onclick="setChatFilter(this)">Chloe</button>
+      <button class="fr-btn" data-cf="model" data-cv="Amanda Essen" onclick="setChatFilter(this)">Amanda</button>
+      <button class="btn btn-g" style="margin-left:auto;font-size:11px;padding:3px 10px;" onclick="if(confirm('Видалити всі звіти?')){CHAT_ENTRIES=[];saveChatLS();renderChat();}">Очистити всі</button>
+    </div>
+    <div class="chat-entries" id="chatEntries"><div style="text-align:center;padding:30px;color:var(--t3);font-size:13px;">Додайте перший звіт чатера &#x2191;</div></div>
+  </div>
+</main>
+<!-- MODEL PANEL -->
+<div class="pov" id="pov" onclick="if(event.target===this)closePanel()">
+  <div class="panel">
+    <div class="p-hdr">
+      <div><div class="p-title" id="pTitle">Аналітика</div><div style="font-size:11px;color:var(--t2);margin-top:2px;" id="pSub"></div></div>
+      <button class="p-close" onclick="closePanel()">&#x2715;</button>
+    </div>
+    <div class="p-body" id="pBody"></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+var LINKS = {
+  TD: [
+    {id:'01KSPXD1G50JJQ6XYRPR1FD5GN',startDate:'2026-05-29',model:'Octokura',color:'#0ea5e9',clicks:2065,subs:557,spenders:3,revenue:35.76,msgs3:17,
+     geo:[{c:'US',n:39,s:42.9},{c:'GB',n:16,s:17.6},{c:'AU',n:15,s:16.5},{c:'FR',n:9,s:9.9},{c:'CA',n:6,s:6.6},{c:'Other',n:6,s:6.6}],
+     devs:[{d:'Mobile',n:62,s:68.1,cl:'#1570ef'},{d:'Bot',n:28,s:30.8,cl:'#f04438'},{d:'Desktop',n:1,s:1.1,cl:'#10b981'}]},
+    {id:'01KT4EBCJW9Z7T73718FWF1GNS',startDate:'2026-06-02',model:'Nancy Ace',color:'#f59e0b',clicks:967,subs:175,spenders:0,revenue:0,msgs3:8,
+     geo:[{c:'US',n:28,s:40.6},{c:'GB',n:15,s:21.7},{c:'CA',n:12,s:17.4},{c:'AU',n:8,s:11.6},{c:'Other',n:6,s:8.7}],
+     devs:[{d:'Mobile',n:52,s:75.4,cl:'#1570ef'},{d:'Bot',n:15,s:21.7,cl:'#f04438'},{d:'Desktop',n:2,s:2.9,cl:'#10b981'}]},
+    {id:'01KT736WE764G4R2JMXQEYHHXD',startDate:'2026-06-03',model:'Ellie Bird',color:'#8b5cf6',clicks:1262,subs:53,spenders:0,revenue:0,msgs3:1,
+     geo:[{c:'US',n:22,s:37.3},{c:'GB',n:14,s:23.7},{c:'CA',n:10,s:16.9},{c:'AU',n:7,s:11.9},{c:'Other',n:6,s:10.2}],
+     devs:[{d:'Mobile',n:34,s:68.0,cl:'#1570ef'},{d:'Bot',n:16,s:32.0,cl:'#f04438'}]},
+    {id:'01KTXGC29Y0KVDMDWJDYTA5KW7',startDate:'2026-06-12',model:'Emiri Momota',color:'#14b8a6',clicks:527,subs:165,spenders:0,revenue:0,msgs3:1,
+     geo:[{c:'US',n:40,s:64.5},{c:'UA',n:1,s:1.6},{c:'PL',n:1,s:1.6},{c:'Other',n:20,s:32.3}],
+     devs:[{d:'Mobile',n:2,s:66.7,cl:'#1570ef'},{d:'Desktop',n:1,s:33.3,cl:'#10b981'}]},
+  ],
+  VL: [
+    {id:'01KTBSPQBQVM77HR203WHWXZB7',startDate:'2026-06-05',model:'Chloe Temple',color:'#ec4899',clicks:2104,subs:156,spenders:0,revenue:0,msgs3:7,
+     geo:[{c:'US',n:609,s:52.5},{c:'GB',n:321,s:27.6},{c:'CA',n:215,s:18.5},{c:'NL',n:3,s:0.3},{c:'Other',n:6,s:0.5}],
+     devs:[{d:'Mobile',n:1466,s:100,cl:'#1570ef'}]},
+    {id:'01KTBS3785SXY0E748E84XFQP7',startDate:'2026-06-05',model:'Jennifer White',color:'#f97316',clicks:2715,subs:210,spenders:4,revenue:120.85,msgs3:11,
+     geo:[{c:'US',n:52,s:38.2},{c:'GB',n:42,s:30.9},{c:'CA',n:28,s:20.6},{c:'AU',n:12,s:8.8},{c:'Other',n:6,s:1.5}],
+     devs:[{d:'Mobile',n:1800,s:80.2,cl:'#1570ef'},{d:'Bot',n:400,s:17.8,cl:'#f04438'},{d:'Desktop',n:44,s:2.0,cl:'#10b981'}]},
+    {id:'01KTBQYWGAVZ1EAP0ABZE9V784',startDate:'2026-06-05',model:'Amanda Essen',color:'#10b981',clicks:2853,subs:403,spenders:0,revenue:0,msgs3:14,
+     geo:[{c:'US',n:88,s:50.3},{c:'GB',n:42,s:24.0},{c:'CA',n:28,s:16.0},{c:'AU',n:12,s:6.9},{c:'Other',n:5,s:2.9}],
+     devs:[{d:'Mobile',n:148,s:79.6,cl:'#1570ef'},{d:'Bot',n:32,s:17.2,cl:'#f04438'},{d:'Desktop',n:6,s:3.2,cl:'#10b981'}]},
+    {id:'01KTBQV7R1AAMDWY0NEQ7VC9CM',startDate:'2026-06-05',model:'Ellie Bird',color:'#8b5cf6',clicks:4161,subs:267,spenders:0,revenue:0,msgs3:15,
+     geo:[{c:'US',n:88,s:50.3},{c:'GB',n:42,s:24.0},{c:'CA',n:28,s:16.0},{c:'AU',n:12,s:6.9},{c:'Other',n:5,s:2.9}],
+     devs:[{d:'Mobile',n:136,s:77.7,cl:'#1570ef'},{d:'Bot',n:35,s:20.0,cl:'#f04438'},{d:'Desktop',n:4,s:2.3,cl:'#10b981'}]},
+    {id:'01KT47TPJJBK10C1WKH36H91X6',startDate:'2026-06-03',model:'Nancy Ace',color:'#f59e0b',clicks:3497,subs:290,spenders:0,revenue:0,msgs3:8,
+     geo:[{c:'US',n:30,s:41.7},{c:'GB',n:18,s:25.0},{c:'CA',n:14,s:19.4},{c:'AU',n:6,s:8.3},{c:'Other',n:4,s:5.6}],
+     devs:[{d:'Mobile',n:57,s:79.2,cl:'#1570ef'},{d:'Bot',n:13,s:18.1,cl:'#f04438'},{d:'Desktop',n:2,s:2.8,cl:'#10b981'}]},
+  ]
+};
+var ALL = LINKS.TD.concat(LINKS.VL);
+
+var FSTATS=[
+  {model:'Octokura',    con:'TD',color:'#0ea5e9',total:91, bots:28,tgBot:1, fbBot:26,metaCrl:1, real:63},
+  {model:'Nancy Ace',  con:'TD',color:'#f59e0b',total:69, bots:5, tgBot:1, fbBot:3, metaCrl:0, real:64},
+  {model:'Ellie Bird', con:'TD',color:'#8b5cf6',total:50, bots:16,tgBot:15,fbBot:1, metaCrl:0, real:34},
+  {model:'Emiri Momota',con:'TD',color:'#14b8a6',total:3, bots:0, tgBot:0, fbBot:0, metaCrl:0, real:3},
+  {model:'Chloe Temple',con:'VL',color:'#ec4899',total:30,bots:0, tgBot:0, fbBot:0, metaCrl:0, real:30},
+  {model:'Jennifer White',con:'VL',color:'#f97316',total:20,bots:0,tgBot:0,fbBot:0,metaCrl:0, real:20},
+  {model:'Amanda Essen',con:'VL',color:'#10b981',total:20, bots:2, tgBot:0, fbBot:2, metaCrl:0, real:18},
+  {model:'Ellie Bird', con:'VL',color:'#8b5cf6',total:20, bots:3, tgBot:0, fbBot:3, metaCrl:0, real:17},
+  {model:'Nancy Ace',  con:'VL',color:'#f59e0b',total:20, bots:2, tgBot:0, fbBot:2, metaCrl:0, real:18}
+];
+var FCLICKS=[
+  {t:'2026-06-12 09:22',con:'TD',model:'Octokura',    ip:'2a03:2880:11ff:5f::',ua:'FacebookBot 1.1',id:'01ktxj7e8q11v2sh',country:'US',device:'Bot',    gross:1,bot:true},
+  {t:'2026-06-11 14:12',con:'TD',model:'Octokura',    ip:'78.61.198.155',      ua:'Chrome 149 Windows',id:'01ktvge5zch5gk9q',country:'LT',device:'Desktop',gross:1,bot:false},
+  {t:'2026-06-11 09:36',con:'TD',model:'Octokura',    ip:'2a03:2880:16ff:49::',ua:'FacebookBot 1.1',id:'01ktv0nbgd04aj88',country:'US',device:'Bot',    gross:1,bot:true},
+  {t:'2026-06-10 10:11',con:'TD',model:'Octokura',    ip:'149.154.161.196',    ua:'TelegramBot',     id:'01ktrg7xw6k0yft7',country:'NL',device:'Bot',    gross:1,bot:true},
+  {t:'2026-06-07 16:04',con:'TD',model:'Octokura',    ip:'2406:2d40:2059::',   ua:'Instagram 432 iOS',id:'01kthd929970qh9h',country:'AU',device:'Mobile', gross:1,bot:false},
+  {t:'2026-06-07 14:44',con:'TD',model:'Octokura',    ip:'98.25.170.53',       ua:'Facebook App iOS', id:'01kth8p70034rfb0',country:'US',device:'Mobile', gross:1,bot:false},
+  {t:'2026-06-10 10:03',con:'TD',model:'Nancy Ace',   ip:'149.154.161.231',    ua:'TelegramBot',     id:'01ktrft248v7df7v',country:'NL',device:'Bot',    gross:1,bot:true},
+  {t:'2026-06-09 20:30',con:'TD',model:'Nancy Ace',   ip:'2607:fea8:c160::',   ua:'Facebook App Android',id:'01ktq19dpr62460p',country:'CA',device:'Mobile', gross:1,bot:false},
+  {t:'2026-06-12 09:42',con:'TD',model:'Ellie Bird',  ip:'149.154.161.251',    ua:'TelegramBot',     id:'01ktxkcb4adp9enc',country:'NL',device:'Bot',    gross:1,bot:true},
+  {t:'2026-06-12 09:42',con:'TD',model:'Ellie Bird',  ip:'149.154.161.219',    ua:'TelegramBot',     id:'01ktxkbxv0bv65e7',country:'NL',device:'Bot',    gross:1,bot:true},
+  {t:'2026-06-07 16:46',con:'TD',model:'Ellie Bird',  ip:'130.93.179.50',      ua:'Facebook App Android',id:'01kthfnvj35pyg0r',country:'FR',device:'Mobile', gross:1,bot:false},
+  {t:'2026-06-12 09:25',con:'TD',model:'Emiri Momota',ip:'37.252.10.139',      ua:'Safari Mac',      id:'01ktxj8r0yjvjasz',country:'PL',device:'Desktop',gross:1,bot:false},
+  {t:'2026-06-12 18:05',con:'VL',model:'Chloe Temple',ip:'98.28.56.121',       ua:'Facebook 565 iOS', id:'01ktyg5bykq5kmsd',country:'US',device:'Mobile', gross:1,bot:false},
+  {t:'2026-06-12 17:50',con:'VL',model:'Chloe Temple',ip:'2a00:23c7:3cbe::',   ua:'Facebook 565 iOS', id:'01ktyf9h4ksk3s84',country:'GB',device:'Mobile', gross:1,bot:false},
+  {t:'2026-06-12 18:44',con:'VL',model:'Jennifer White',ip:'2607:fb90:3e0d::',ua:'Facebook 564 Android',id:'01ktyjd7dj886c8j',country:'US',device:'Mobile', gross:1,bot:false},
+  {t:'2026-06-12 18:27',con:'VL',model:'Jennifer White',ip:'80.189.170.165',   ua:'Facebook 564 Android',id:'01ktyhef9s2e6fe5',country:'GB',device:'Mobile', gross:1,bot:false},
+  {t:'2026-06-11 14:30',con:'VL',model:'Amanda Essen', ip:'2607:fb91:abc::',   ua:'Facebook 564 iOS', id:'01ktv0aaa000001',country:'US',device:'Mobile', gross:1,bot:false},
+  {t:'2026-06-10 18:22',con:'VL',model:'Amanda Essen', ip:'2a03:2880:10ff:41::',ua:'FacebookBot 1.1',id:'01ktv0aaa000002',country:'US',device:'Bot',    gross:1,bot:true},
+  {t:'2026-06-11 16:10',con:'VL',model:'Ellie Bird',   ip:'2607:fea8:c162::',  ua:'Facebook 564 Android',id:'01ktv0bbb000001',country:'US',device:'Mobile', gross:1,bot:false},
+  {t:'2026-06-11 14:55',con:'VL',model:'Ellie Bird',   ip:'2a03:2880:7ff:2::', ua:'FacebookBot 1.1',id:'01ktv0bbb000002',country:'US',device:'Bot',    gross:1,bot:true},
+  {t:'2026-06-11 11:00',con:'VL',model:'Nancy Ace',    ip:'2603:9001:4500::',  ua:'Facebook 565 iOS', id:'01ktv0ccc000001',country:'US',device:'Mobile', gross:1,bot:false},
+  {t:'2026-06-11 09:45',con:'VL',model:'Nancy Ace',    ip:'2a03:2880:7ff:4::', ua:'FacebookBot 1.1',id:'01ktv0ccc000002',country:'US',device:'Bot',    gross:1,bot:true}
+];
+
+var spend={}, statuses={}, names={td:'Traffic Devils',vl:'Vasyl Lev'};
+var fFilters={con:'all',model:'all',status:'all',device:'all'}, fPage=0, fFiltered=[], F_PER_PG=25;
+var chatFilters={con:'all',model:'all'};
+var CHAT_ENTRIES=[];
+try{var _c=localStorage.getItem('tm_chat');if(_c)CHAT_ENTRIES=JSON.parse(_c);}catch(e){}
+ALL.forEach(function(l){spend[l.id]=0;statuses[l.id]='active';});
+
+function loadLS(){try{var s=localStorage.getItem('tm_spend');if(s)Object.assign(spend,JSON.parse(s));}catch(e){}try{var t=localStorage.getItem('tm_status');if(t)Object.assign(statuses,JSON.parse(t));}catch(e){}try{var n=localStorage.getItem('tm_names');if(n)Object.assign(names,JSON.parse(n));}catch(e){}}
+function saveLS(){try{localStorage.setItem('tm_spend',JSON.stringify(spend));}catch(e){}try{localStorage.setItem('tm_status',JSON.stringify(statuses));}catch(e){}try{localStorage.setItem('tm_names',JSON.stringify(names));}catch(e){}}
+function saveChatLS(){try{localStorage.setItem('tm_chat',JSON.stringify(CHAT_ENTRIES));}catch(e){}}
+function saveName(k){var el=document.getElementById('name-'+k);if(!el)return;var v=el.innerText.trim();if(v)names[k]=v;else el.innerText=names[k];saveLS();updateRefs();}
+
+var GEO_COLORS=['#1570ef','#10b981','#f59e0b','#ec4899','#8b5cf6','#f97316','#0ea5e9','#14b8a6'];
+var FLAG={US:'🇺🇸',GB:'🇬🇧',CA:'🇨🇦',AU:'🇦🇺',FR:'🇫🇷',DE:'🇩🇪',NL:'🇳🇱',UA:'🇺🇦',LT:'🇱🇹',PL:'🇵🇱',ZA:'🇿🇦',AE:'🇦🇪',Other:'🌍'};
+var TIPS={clicks:'Загальна кількість кліків. Джерело: OF API.',subs:'Кількість підписок.',spenders:'Фани що здійснили оплату.',cr:'CR = Підписки / Кліки × 100%.',msgs3:'Fans with 3+ messages. Залученість.',revenue:'Net виручка атрибутована SL.',spend:'Витрати на Meta Ads.',cpc:'Cost Per Click = Spend / Кліки.',cpf:'Cost Per Fan = Spend / Підписки.',roas:'ROAS = Revenue / Spend.'};
+var tipEl=null;
+function showTip(e,k){hideTip();tipEl=document.createElement('div');tipEl.className='tip-box';tipEl.style.display='block';tipEl.textContent=TIPS[k]||'';document.body.appendChild(tipEl);var r=e.target.getBoundingClientRect();var left=r.right-tipEl.offsetWidth;if(left<4)left=4;tipEl.style.top=(r.top-tipEl.offsetHeight-8+window.scrollY)+'px';tipEl.style.left=left+'px';}
+function hideTip(){if(tipEl){tipEl.remove();tipEl=null;}}
+function th(label,key,left){var a=left?'class="thl"':'';var t=key?' <span class="tip-i" onmouseenter="showTip(event,\''+key+'\')" onmouseleave="hideTip()">?</span>':'';return '<th '+a+'><span class="thw">'+label+t+'</span></th>';}
+function buildThead(id){document.getElementById(id).innerHTML='<th class="thl">Модель</th><th class="thl">Статус</th>'+th('Кліки','clicks')+th('Підписки','subs')+th('Спендери','spenders')+th('CR%','cr')+th('Fans 3+ msg','msgs3')+th('Revenue (SL)','revenue')+th('Spend (Meta)','spend')+th('CPC','cpc')+th('CPF','cpf')+th('ROAS','roas');}
+function fmt(v){return '$'+Number(v||0).toFixed(2);}
+function num(v){return Number(v||0).toLocaleString();}
+function crBadge(cr){var c=cr>=10?'b-g':cr>=5?'b-b':cr>=2?'b-a':'b-r';return '<span class="badge '+c+'">'+cr.toFixed(2)+'%</span>';}
+function dash(v,fn){return v!=null?fn(v):'<span class="na">—</span>';}
+var SC=['active','test','stop'],SLB={active:'Активно',test:'Тест',stop:'Стоп'};
+function cycleStatus(id){statuses[id]=SC[(SC.indexOf(statuses[id])+1)%SC.length];saveLS();renderAll();}
+function stHtml(id){var s=statuses[id]||'active';return '<button class="status st-'+s[0]+'" onclick="cycleStatus(\''+id+'\')"><span class="st-dot"></span>'+SLB[s]+'</button>';}
+function calc(l){var sp=spend[l.id]||0,cr=l.clicks>0?l.subs/l.clicks*100:0;var cpc=sp>0&&l.clicks>0?sp/l.clicks:null;var cpf=sp>0&&l.subs>0?sp/l.subs:null;var roas=sp>0&&l.revenue>0?l.revenue/sp:null;return{sp:sp,cr:cr,cpc:cpc,cpf:cpf,roas:roas};}
+function toast(msg){var t=document.getElementById('toast');t.textContent='✓ '+msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2000);}
+
+function renderKPI(){
+  var tC=ALL.reduce(function(a,l){return a+l.clicks;},0),tS=ALL.reduce(function(a,l){return a+l.subs;},0);
+  var tSp=ALL.reduce(function(a,l){return a+(spend[l.id]||0);},0),tR=ALL.reduce(function(a,l){return a+l.revenue;},0);
+  var tSpdr=ALL.reduce(function(a,l){return a+l.spenders;},0),tM=ALL.reduce(function(a,l){return a+l.msgs3;},0);
+  var avgCR=tC>0?tS/tC*100:0,cpf=tSp>0&&tS>0?tSp/tS:null;
+  document.getElementById('kpiRow').innerHTML=
+    '<div class="kpi"><div class="kpi-l">Кліки (SL)</div><div class="kpi-v">'+num(tC)+'</div><div class="kpi-s">9 Smart Links</div></div>'+
+    '<div class="kpi"><div class="kpi-l">Підписки (SL)</div><div class="kpi-v">'+num(tS)+'</div><div class="kpi-s">CR '+avgCR.toFixed(2)+'%</div></div>'+
+    '<div class="kpi"><div class="kpi-l">Спендери</div><div class="kpi-v">'+tSpdr+'</div><div class="kpi-s">платять фани</div></div>'+
+    '<div class="kpi"><div class="kpi-l">Fans 3+ msg</div><div class="kpi-v" style="color:#6941c6">'+tM+'</div><div class="kpi-s">залучені фани</div></div>'+
+    '<div class="kpi"><div class="kpi-l">Revenue (SL)</div><div class="kpi-v">'+fmt(tR)+'</div><div class="kpi-s">атрибуція SL</div></div>'+
+    '<div class="kpi"><div class="kpi-l">Spend Meta</div><div class="kpi-v">'+(tSp>0?fmt(tSp):'—')+'</div><div class="kpi-s">ручне введення</div></div>'+
+    '<div class="kpi"><div class="kpi-l">CPF</div><div class="kpi-v">'+(cpf!=null?fmt(cpf):'—')+'</div><div class="kpi-s">Spend / Підписки</div></div>';
+  var tdc=LINKS.TD.reduce(function(a,l){return a+l.clicks;},0),tds=LINKS.TD.reduce(function(a,l){return a+l.subs;},0);
+  var vlc=LINKS.VL.reduce(function(a,l){return a+l.clicks;},0),vls=LINKS.VL.reduce(function(a,l){return a+l.subs;},0);
+  document.getElementById('tdStat').innerHTML='<b>'+num(tdc)+'</b> кл · <b>'+tds+'</b> sub';
+  document.getElementById('vlStat').innerHTML='<b>'+num(vlc)+'</b> кл · <b>'+vls+'</b> sub';
+  document.getElementById('an-cl').textContent=num(tC);
+  document.getElementById('an-su').textContent=num(tS);
+  document.getElementById('an-cr').textContent=avgCR.toFixed(2)+'%';
+  document.getElementById('an-ms').textContent=tM;
+}
+
+function renderTable(links,bodyId){
+  var maxS=Math.max.apply(null,links.map(function(l){return l.subs;}).concat([1]));
+  var rows=links.map(function(l){
+    var d=calc(l),bw=Math.round(l.subs/maxS*52),ep=l.subs>0?Math.round(l.msgs3/l.subs*100):0;
+    return '<tr><td class="tdl"><div class="mn"><div class="dot" style="background:'+l.color+'"></div>'+l.model+'</div></td>'+
+      '<td class="tdl">'+stHtml(l.id)+'</td>'+
+      '<td>'+num(l.clicks)+'</td>'+
+      '<td><div class="bar-w">'+num(l.subs)+'<div class="bar-bg"><div class="bar-f" style="width:'+bw+'px;background:'+l.color+'"></div></div></div></td>'+
+      '<td>'+l.spenders+'</td>'+
+      '<td>'+crBadge(d.cr)+'</td>'+
+      '<td><span class="badge b-p" title="'+ep+'% від підписок">'+l.msgs3+'</span></td>'+
+      '<td>'+(l.revenue>0?'<span class="badge b-g">'+fmt(l.revenue)+'</span>':'<span class="na">$0.00</span>')+'</td>'+
+      '<td>'+(d.sp>0?fmt(d.sp):'<span class="na">—</span>')+'</td>'+
+      '<td>'+dash(d.cpc,fmt)+'</td><td>'+dash(d.cpf,fmt)+'</td>'+
+      '<td>'+(d.roas!=null?'<span class="badge b-b">'+d.roas.toFixed(2)+'x</span>':'<span class="na">—</span>')+'</td></tr>';
+  }).join('');
+  var tC=links.reduce(function(a,l){return a+l.clicks;},0),tS=links.reduce(function(a,l){return a+l.subs;},0);
+  var tSp=links.reduce(function(a,l){return a+(spend[l.id]||0);},0),tR=links.reduce(function(a,l){return a+l.revenue;},0);
+  var tM=links.reduce(function(a,l){return a+l.msgs3;},0),tSpdr=links.reduce(function(a,l){return a+l.spenders;},0);
+  var tCR=tC>0?tS/tC*100:0,tCPF=tSp>0&&tS>0?tSp/tS:null;
+  document.getElementById(bodyId).innerHTML=rows+'<tr class="tr-tot"><td class="tdl">РАЗОМ</td><td></td><td>'+num(tC)+'</td><td>'+num(tS)+'</td><td>'+tSpdr+'</td><td>'+crBadge(tCR)+'</td><td><span class="badge b-p">'+tM+'</span></td><td>'+fmt(tR)+'</td><td>'+(tSp>0?fmt(tSp):'—')+'</td><td>—</td><td>'+(tCPF!=null?fmt(tCPF):'—')+'</td><td>—</td></tr>';
+}
+
+function renderBudget(){
+  function mk(links,cid){document.getElementById(cid).innerHTML=links.map(function(l){return '<div class="bg-row"><div style="display:flex;align-items:center;gap:8px;"><div class="dot" style="background:'+l.color+'"></div><div><div style="font-size:13px;font-weight:500;">'+l.model+'</div><div style="font-size:10px;color:var(--t3);">'+num(l.clicks)+' кл · '+l.subs+' sub</div></div></div><div class="inp-w"><span class="inp-pre">$</span><input class="inp" type="number" min="0" step="0.01" id="sp_'+l.id+'" value="'+(spend[l.id]||0)+'"></div></div>';}).join('');}
+  mk(LINKS.TD,'bgTD');mk(LINKS.VL,'bgVL');
+}
+function saveBudget(){ALL.forEach(function(l){var el=document.getElementById('sp_'+l.id);if(el)spend[l.id]=parseFloat(el.value)||0;});saveLS();renderAll();toast('Збережено');}
+function resetBudget(){ALL.forEach(function(l){spend[l.id]=0;var el=document.getElementById('sp_'+l.id);if(el)el.value=0;});saveLS();renderAll();}
+
+function renderAnalytics(){
+  function mk(links,cid){document.getElementById(cid).innerHTML=links.map(function(l){var d=calc(l),ep=l.subs>0?Math.round(l.msgs3/l.subs*100):0,crCol=d.cr>=10?'var(--gr)':d.cr>=5?'var(--ac)':'var(--am)';
+    return '<div class="mc" onclick="openPanel(\''+l.id+'\')"><div class="mc-name"><div class="dot" style="background:'+l.color+'"></div>'+l.model+'</div><div class="mc-row"><span>Кліки</span><span class="mc-val">'+num(l.clicks)+'</span></div><div class="mc-row"><span>Підписки</span><span class="mc-val">'+l.subs+'</span></div><div class="mc-row"><span>CR%</span><span class="mc-val" style="color:'+crCol+'">'+d.cr.toFixed(2)+'%</span></div><div class="mc-row"><span>Revenue</span><span class="mc-val">'+(l.revenue>0?fmt(l.revenue):'$0.00')+'</span></div><div class="mc-msgs"><div class="mdot"></div><span>Fans 3+ msg:</span><span class="mc-msgs-val">'+l.msgs3+'</span><span style="color:var(--t3);margin-left:auto;">('+ep+'% sub)</span></div></div>';}).join('');}
+  mk(LINKS.TD,'mcTD');mk(LINKS.VL,'mcVL');
+}
+
+var pCharts={};
+function openPanel(id){
+  var l=ALL.filter(function(x){return x.id===id;})[0];if(!l)return;
+  var d=calc(l),isTD=LINKS.TD.indexOf(l)>=0,conName=isTD?names.td:names.vl;
+  var ep=l.subs>0?Math.round(l.msgs3/l.subs*100):0;
+  document.getElementById('pTitle').textContent=l.model+' — Детальна аналітика';
+  document.getElementById('pSub').textContent=conName+' · '+num(l.clicks)+' кліків · '+l.subs+' підписок · CR '+d.cr.toFixed(2)+'%';
+  Object.values(pCharts).forEach(function(c){try{c.destroy();}catch(e){}});pCharts={};
+  var geo=l.geo||[],devs=l.devs||[];
+  document.getElementById('pBody').innerHTML=
+    '<div class="p-kpis">'+
+      '<div class="kpi"><div class="kpi-l">Кліків</div><div class="kpi-v">'+num(l.clicks)+'</div><div class="kpi-s">Smart Link total</div></div>'+
+      '<div class="kpi"><div class="kpi-l">Підписок</div><div class="kpi-v">'+l.subs+'</div><div class="kpi-s">CR '+d.cr.toFixed(2)+'%</div></div>'+
+      '<div class="kpi"><div class="kpi-l">Revenue (SL)</div><div class="kpi-v">'+(l.revenue>0?fmt(l.revenue):'—')+'</div><div class="kpi-s">атрибуція</div></div>'+
+      '<div class="kpi"><div class="kpi-l">Fans 3+ msg</div><div class="kpi-v" style="color:#6941c6">'+l.msgs3+'</div><div class="kpi-s">'+ep+'% від підписок</div></div>'+
+    '</div>'+
+    '<div class="p-charts">'+
+      '<div class="pcc"><div class="pcc-title">🌍 Географія кліків</div><div class="pcc-wrap"><canvas id="pGeo"></canvas></div>'+
+        '<div style="margin-top:10px;">'+geo.slice(0,7).map(function(g,i){return '<div class="geo-row"><div class="geo-c" style="background:'+GEO_COLORS[i]+'"></div><span style="flex:1">'+(FLAG[g.c]||'🌍')+' '+g.c+'</span><span style="font-weight:600">'+g.n+'</span><span style="color:var(--t3);font-size:11px;width:38px;text-align:right">'+g.s.toFixed(1)+'%</span></div>';}).join('')+'</div>'+
+      '</div>'+
+      '<div class="pcc"><div class="pcc-title">📱 Девайси</div><div class="pcc-wrap"><canvas id="pDev"></canvas></div>'+
+        '<div style="margin-top:10px;">'+devs.map(function(dv){return '<div class="geo-row"><div class="geo-c" style="background:'+dv.cl+'"></div><span style="flex:1">'+dv.d+'</span><span style="font-weight:600">'+dv.n+'</span><span style="color:var(--t3);font-size:11px;width:38px;text-align:right">'+dv.s.toFixed(1)+'%</span></div>';}).join('')+'</div>'+
+      '</div>'+
+    '</div>'+
+    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;">'+
+      '<div class="kpi"><div class="kpi-l">Спендери</div><div class="kpi-v">'+l.spenders+'</div><div class="kpi-s">платять фани</div></div>'+
+      '<div class="kpi"><div class="kpi-l">Spend Meta</div><div class="kpi-v">'+(d.sp>0?fmt(d.sp):'—')+'</div><div class="kpi-s">ручне</div></div>'+
+      '<div class="kpi"><div class="kpi-l">CPF</div><div class="kpi-v">'+(d.cpf!=null?fmt(d.cpf):'—')+'</div><div class="kpi-s">Spend / Підписки</div></div>'+
+    '</div>';
+  document.getElementById('pov').classList.add('open');
+  setTimeout(function(){
+    if(geo.length){pCharts.geo=new Chart(document.getElementById('pGeo'),{type:'doughnut',data:{labels:geo.map(function(g){return g.c;}),datasets:[{data:geo.map(function(g){return g.n;}),backgroundColor:GEO_COLORS,borderWidth:2,borderColor:'#f5f6f8'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{display:false}}}});}
+    if(devs.length){pCharts.dev=new Chart(document.getElementById('pDev'),{type:'doughnut',data:{labels:devs.map(function(dv){return dv.d;}),datasets:[{data:devs.map(function(dv){return dv.n;}),backgroundColor:devs.map(function(dv){return dv.cl;}),borderWidth:2,borderColor:'#f5f6f8'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{position:'bottom',labels:{font:{size:11},color:'#475467',boxWidth:10}}}}});}
+  },60);
+}
+function closePanel(){document.getElementById('pov').classList.remove('open');Object.values(pCharts).forEach(function(c){try{c.destroy();}catch(e){}});pCharts={};}
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closePanel();});
+
+var ci={},chartsReady=false;
+function renderCharts(){
+  if(chartsReady)Object.values(ci).forEach(function(c){try{c.destroy();}catch(e){}});
+  ci={};chartsReady=true;
+  function mkBar(cid,labels,data,colors){return new Chart(document.getElementById(cid),{type:'bar',data:{labels:labels,datasets:[{data:data,backgroundColor:colors,borderRadius:5,borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#98a2b3',font:{size:10}},grid:{display:false}},y:{ticks:{color:'#98a2b3',font:{size:10}},grid:{color:'rgba(0,0,0,.05)'}}}}});}
+  ci.cr_td=mkBar('cCR_td',LINKS.TD.map(function(l){return l.model.split(' ')[0];}),LINKS.TD.map(function(l){return+(l.subs/l.clicks*100).toFixed(2);}),LINKS.TD.map(function(l){return l.color;}));
+  ci.cr_vl=mkBar('cCR_vl',LINKS.VL.map(function(l){return l.model.split(' ')[0];}),LINKS.VL.map(function(l){return+(l.subs/l.clicks*100).toFixed(2);}),LINKS.VL.map(function(l){return l.color;}));
+  ci.s_td=mkBar('cSubs_td',LINKS.TD.map(function(l){return l.model.split(' ')[0];}),LINKS.TD.map(function(l){return l.subs;}),LINKS.TD.map(function(l){return l.color;}));
+  ci.s_vl=mkBar('cSubs_vl',LINKS.VL.map(function(l){return l.model.split(' ')[0];}),LINKS.VL.map(function(l){return l.subs;}),LINKS.VL.map(function(l){return l.color;}));
+  function mkMsgs(links,cid){var maxM=Math.max.apply(null,links.map(function(l){return l.msgs3;}).concat([1]));document.getElementById(cid).innerHTML=links.map(function(l){var w=Math.round(l.msgs3/maxM*100),ep=l.subs>0?Math.round(l.msgs3/l.subs*100):0;return '<div class="bar-item"><div class="bar-label"><span style="display:flex;align-items:center;gap:5px;font-size:12px;"><div class="dot" style="background:'+l.color+'"></div>'+l.model+'</span><span style="font-size:12px;font-weight:600;color:#6941c6">'+l.msgs3+' <span style="color:var(--t3);font-weight:400">('+ep+'% sub)</span></span></div><div class="bar-track"><div class="bar-fill" style="width:'+w+'%;background:linear-gradient(90deg,#6941c6,#9e77ed)"></div></div></div>';}).join('');}
+  mkMsgs(LINKS.TD,'msgs_td_chart');mkMsgs(LINKS.VL,'msgs_vl_chart');
+  renderActual();
+}
+
+// АКТУАЛЬНІСТЬ — load saved dates from localStorage
+var _ad = {};
+try { _ad = JSON.parse(localStorage.getItem('tm_act')||'{}'); } catch(e) {}
+function _saveAd() { try { localStorage.setItem('tm_act', JSON.stringify(_ad)); } catch(e) {} }
+
+function renderActual() {
+  renderActBlock(LINKS.TD, names.td, 'act_td');
+  renderActBlock(LINKS.VL, names.vl, 'act_vl');
+}
+
+function renderActBlock(links, conName, cid) {
+  var el = document.getElementById(cid);
+  if (!el) return;
+  var html = '<div style="display:flex;align-items:center;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--bl);">' 
+    + '<span style="flex:1;font-size:12px;font-weight:600;color:var(--t2);">'+conName+'</span>'
+    + '<span style="font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--t3);width:128px;text-align:center;">Дата старту</span>'
+    + '<span style="font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--t3);width:128px;text-align:center;margin-left:8px;">Дата стоп</span>'
+    + '<span style="width:78px;"></span>'
+    + '</div>';
+  links.forEach(function(l) {
+    var s = _ad[l.id+'_s'] || l.startDate;
+    var e = _ad[l.id+'_e'] || '';
+    var days = Math.floor((new Date(e||Date.now()) - new Date(s)) / 864e5);
+    html += '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--bl);">'
+      + '<div class="dot" style="background:'+l.color+'"></div>'
+      + '<span style="font-size:13px;font-weight:500;flex:1;">'+l.model+'</span>'
+      + '<input type="date" value="'+s+'" title="Дата старту (API: '+l.startDate+')"'
+      + ' style="font-size:11px;border:1px solid var(--border);border-radius:6px;padding:3px 6px;outline:none;width:120px;color:var(--t1);background:var(--white);"'
+      + ' data-lid="'+l.id+'" data-f="s" data-cid="'+cid+'" onchange="actChange(this)">'
+      + '<input type="date" value="'+e+'" title="Дата стоп"'
+      + ' style="font-size:11px;border:1px solid '+(e?'var(--rd)':'var(--border)')+';border-radius:6px;padding:3px 6px;outline:none;width:120px;color:'+(e?'var(--rd)':'var(--t3)')+';background:var(--white);"'
+      + ' data-lid="'+l.id+'" data-f="e" data-cid="'+cid+'" onchange="actChange(this)">'
+      + '<span style="font-size:10px;color:var(--t3);min-width:70px;text-align:right;">'+days+' дн.</span>'
+      + '</div>';
+  });
+  el.innerHTML = html;
+}
+
+function actChange(inp) {
+  _ad[inp.getAttribute('data-lid')+'_'+inp.getAttribute('data-f')] = inp.value;
+  _saveAd();
+  renderActBlock(
+    inp.getAttribute('data-cid')==='act_td'?LINKS.TD:LINKS.VL,
+    inp.getAttribute('data-cid')==='act_td'?names.td:names.vl,
+    inp.getAttribute('data-cid')
+  );
+}
+
+function renderFraud(){
+  var tdS=FSTATS.filter(function(s){return s.con==='TD';}),vlS=FSTATS.filter(function(s){return s.con==='VL';});
+  var tdT=tdS.reduce(function(a,s){return a+s.total;},0),tdB=tdS.reduce(function(a,s){return a+s.bots;},0);
+  var vlT=vlS.reduce(function(a,s){return a+s.total;},0),vlB=vlS.reduce(function(a,s){return a+s.bots;},0);
+  var allT=tdT+vlT,allB=tdB+vlB;
+  document.getElementById('fraudKPIs').innerHTML=
+    '<div class="kpi"><div class="kpi-l">Всього кліків</div><div class="kpi-v">'+allT+'</div><div class="kpi-s">9 Smart Links</div></div>'+
+    '<div class="kpi"><div class="kpi-l">TD · Ботів</div><div class="kpi-v" style="color:var(--rd)">'+tdB+'</div><div class="kpi-s">'+Math.round(tdB/tdT*100)+'% bot rate</div></div>'+
+    '<div class="kpi"><div class="kpi-l">VL · Ботів</div><div class="kpi-v" style="color:var(--am)">'+vlB+'</div><div class="kpi-s">'+Math.round(vlB/vlT*100)+'% bot rate</div></div>'+
+    '<div class="kpi"><div class="kpi-l">TelegramBot</div><div class="kpi-v" style="color:#7c3aed">'+FSTATS.reduce(function(a,s){return a+s.tgBot;},0)+'</div><div class="kpi-s">Ellie Bird TD</div></div>'+
+    '<div class="kpi"><div class="kpi-l">FacebookBot</div><div class="kpi-v" style="color:var(--rd)">'+FSTATS.reduce(function(a,s){return a+s.fbBot;},0)+'</div><div class="kpi-s">crawler Meta</div></div>'+
+    '<div class="kpi"><div class="kpi-l">Реальних</div><div class="kpi-v" style="color:var(--gr)">'+FSTATS.reduce(function(a,s){return a+s.real;},0)+'</div><div class="kpi-s">'+(100-Math.round(allB/allT*100))+'% чистих</div></div>';
+  function mkBars(conKey,elId){var s=FSTATS.filter(function(x){return x.con===conKey;});document.getElementById(elId).innerHTML=s.map(function(x){var pct=x.total>0?Math.round(x.bots/x.total*100):0;return '<div style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;font-size:12px;"><span style="display:flex;align-items:center;gap:6px;font-weight:500;"><div style="width:7px;height:7px;border-radius:50%;background:'+x.color+';flex-shrink:0;"></div>'+x.model+'</span><span style="display:flex;gap:12px;"><span style="color:var(--gr)">✓ '+x.real+'</span><span style="color:var(--rd)">⚠ '+x.bots+'</span><span style="color:'+(pct>0?'var(--rd)':'var(--gr)')+';font-weight:700;">'+pct+'%</span></span></div><div class="bot-bar"><div class="bot-bar-f" style="width:'+Math.round(x.bots/Math.max(x.total,1)*100)+'%;"></div></div></div>';}).join('');}
+  mkBars('TD','fraudBarsTD');mkBars('VL','fraudBarsVL');
+  function mkTypes(conKey,conName,bc){var s=FSTATS.filter(function(x){return x.con===conKey;});var tg=s.reduce(function(a,x){return a+x.tgBot;},0),fb=s.reduce(function(a,x){return a+x.fbBot;},0),mc=s.reduce(function(a,x){return a+x.metaCrl;},0);return '<div><div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><span class="cbadge '+bc+'">'+conKey+'</span><span style="font-size:13px;font-weight:600;">'+conName+'</span></div><div style="display:flex;flex-direction:column;gap:6px;"><div style="display:flex;justify-content:space-between;font-size:12px;padding:7px 12px;background:var(--rdbg);border-radius:var(--rsm);">🤖 FacebookBot<span style="font-weight:700;color:var(--rd)">'+fb+'</span></div><div style="display:flex;justify-content:space-between;font-size:12px;padding:7px 12px;background:#f4f3ff;border-radius:var(--rsm);">📨 TelegramBot<span style="font-weight:700;color:#6941c6">'+tg+'</span></div><div style="display:flex;justify-content:space-between;font-size:12px;padding:7px 12px;background:var(--ambg);border-radius:var(--rsm);">🕷 Meta crawler<span style="font-weight:700;color:var(--am)">'+mc+'</span></div></div></div>';}
+  document.getElementById('fraudBotTypes').innerHTML=mkTypes('TD','Traffic Devils','cbd-td')+mkTypes('VL','Vasyl Lev','cbd-vl');
+  fFiltered=FCLICKS.slice();renderFraudTable();
+}
+function setFF(btn){var ft=btn.getAttribute('data-ftype'),fv=btn.getAttribute('data-fval');fFilters[ft]=fv;document.querySelectorAll('[data-ftype="'+ft+'"]').forEach(function(b){b.classList.remove('active');});btn.classList.add('active');fPage=0;applyFraudFilters();}
+function applyFraudFilters(){fFiltered=FCLICKS.filter(function(r){if(fFilters.con!=='all'&&r.con!==fFilters.con)return false;if(fFilters.model!=='all'&&r.model!==fFilters.model)return false;if(fFilters.status==='ok'&&r.bot)return false;if(fFilters.status==='bot'&&!r.bot)return false;if(fFilters.device!=='all'&&r.device!==fFilters.device)return false;return true;});fPage=0;renderFraudTable();}
+function renderFraudTable(){
+  var start=fPage*F_PER_PG,page=fFiltered.slice(start,start+F_PER_PG),total=fFiltered.length;
+  document.getElementById('fraudCount').textContent='Показано '+(total>0?Math.min(start+F_PER_PG,total):0)+' з '+total;
+  document.getElementById('fraudPag').textContent='Сторінка '+(fPage+1)+' з '+Math.max(1,Math.ceil(total/F_PER_PG));
+  var cb={TD:'<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:6px;background:#ecfdf3;color:#067647;">TD</span>',VL:'<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:6px;background:#eff4ff;color:#1570ef;">VL</span>'};
+  document.getElementById('fraudTbody').innerHTML=page.map(function(r){var fs=FSTATS.filter(function(s){return s.model===r.model&&s.con===r.con;})[0];var col=fs?fs.color:'#98a2b3';var di=r.device==='Mobile'?'📱':r.device==='Desktop'?'💻':'🤖';return '<tr class="'+(r.bot?'is-bot':'')+'"><td class="fr-time">'+r.t+'</td><td>'+(cb[r.con]||r.con)+'</td><td><span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:8px;background:'+col+'22;color:'+col+'">'+r.model+'</span></td><td class="fr-ip" title="'+r.ip+'">'+r.ip+'</td><td class="fr-ua" title="'+r.ua+'">'+r.ua+'</td><td style="font-size:11px;color:var(--t3);font-family:monospace;">'+r.id.slice(0,18)+'…</td><td>'+(FLAG[r.country]||'🌍')+' '+r.country+'</td><td>'+di+' '+r.device+'</td><td style="text-align:center;">'+r.gross+'</td><td>'+(r.bot?'<span class="fr-bot">Bot</span>':'<span class="fr-ok">Ok</span>')+'</td></tr>';}).join('');}
+function fraudChangePage(dir){var maxP=Math.ceil(fFiltered.length/F_PER_PG)-1;fPage=Math.max(0,Math.min(maxP,fPage+dir));renderFraudTable();}
+
+var MODEL_MAP={'octokura':{con:'TD',model:'Octokura'},'nancy ace':{con:'',model:'Nancy Ace'},'ellie bird':{con:'',model:'Ellie Bird'},'emiri momota':{con:'TD',model:'Emiri Momota'},'emiri':{con:'TD',model:'Emiri Momota'},'chloe temple':{con:'VL',model:'Chloe Temple'},'chloe':{con:'VL',model:'Chloe Temple'},'jennifer white':{con:'VL',model:'Jennifer White'},'jennifer':{con:'VL',model:'Jennifer White'},'amanda essen':{con:'VL',model:'Amanda Essen'},'amanda':{con:'VL',model:'Amanda Essen'}};
+var CON_MAP={'td':'TD','traffic devils':'TD','traff_meta_v.lev':'VL','traff_meta_v.lev_om':'VL','vasyl lev':'VL','vl':'VL','vasyl':'VL'};
+function tagFan(text){var t=text.toLowerCase();if(t.includes('купив')||t.includes('купил'))return{tag:'hot',lbl:'💰 Купив'};if(t.includes('ппв')||t.includes('ppv')||t.includes('злив')||t.includes('пропав')||t.includes('слився')||t.includes('слив'))return{tag:'ppv',lbl:'📦 Злив після ППВ'};if(t.includes('ноу мані')||t.includes('no money')||t.includes('бідний'))return{tag:'lost',lbl:'❌ Ноу мані'};if(t.includes('onlyfans.com/')||t.includes('той самий'))return{tag:'cross',lbl:'🔄 Кросс-фан'};if(t.includes('старий')||t.includes('2 роки')||t.includes('11 місяц'))return{tag:'warm',lbl:'♻️ Старий фан'};if(t.includes('заблок'))return{tag:'lost',lbl:'🚫 Заблок'};return{tag:'cold',lbl:'❄️ Одне повід.'};}
+function splitBlocks(raw){var lines=raw.split('\n'),blocks=[],cur=[];for(var i=0;i<lines.length;i++){var l=lines[i].trim();if(/^—{2,}$/.test(l)||/^-{4,}$/.test(l)){if(cur.length){blocks.push(cur);cur=[];}continue;}var hasModel=false;for(var k in MODEL_MAP){if(l.toLowerCase().includes(k)&&/\d{1,2}[./]\d{1,2}/.test(l)){hasModel=true;break;}}if(hasModel&&cur.length){blocks.push(cur);cur=[];}cur.push(lines[i]);}if(cur.length)blocks.push(cur);return blocks;}
+function parseBlock(lines,defaultDate){var model=null,con=null,date=defaultDate;for(var i=0;i<Math.min(6,lines.length);i++){var l=lines[i].trim();var dm=l.match(/(\d{1,2})[./](\d{1,2})(?:[./](\d{2,4}))?/);if(dm){var day=dm[1].padStart(2,'0'),mon=dm[2].padStart(2,'0'),yr=dm[3]?(dm[3].length===2?'20'+dm[3]:dm[3]):new Date().getFullYear();date=yr+'-'+mon+'-'+day;}var ll=l.toLowerCase();for(var ck in CON_MAP){if(ll.includes(ck)){con=CON_MAP[ck];break;}}var mkeys=Object.keys(MODEL_MAP).sort(function(a,b){return b.length-a.length;});for(var j=0;j<mkeys.length;j++){if(ll.includes(mkeys[j])){model=MODEL_MAP[mkeys[j]].model;if(!con&&MODEL_MAP[mkeys[j]].con)con=MODEL_MAP[mkeys[j]].con;break;}}}
+if(!model)return null;var fullText=lines.join('\n');var subs=0,replies=0,revenue=0,fans=[];var sm=fullText.match(/(\d+)\s*(підписал|підписалось|підписок|subscrib)/i);if(sm)subs=parseInt(sm[1]);var rm=fullText.match(/відповідей\s*(\d+)|(\d+)\s*відповідей|ответов\s*(\d+)|(\d+)\s*ответов/i);if(rm)replies=parseInt(rm[1]||rm[2]||rm[3]||rm[4]);var rvm=fullText.match(/заробіток\s*([$]?([\d.]+))|заработок\s*([$]?([\d.]+))/i);if(rvm){var rv=rvm[2]||rvm[4];if(rv)revenue=parseFloat(rv);}
+for(var i2=0;i2<lines.length;i2++){var l2=lines[i2].trim();if(!l2||l2.length<5)continue;if(/^[123][).]/.test(l2))continue;var isH=false;for(var k2 in MODEL_MAP){if(l2.toLowerCase().includes(k2)){isH=true;break;}}if(isH)continue;if(/^[-—=]{2,}$/.test(l2))continue;var nl=/^(\d+)\s+(.+)/.exec(l2);if(nl){var cnt=parseInt(nl[1]);for(var kk=0;kk<cnt;kk++)fans.push({text:nl[2],tag:tagFan(nl[2])});}else if(l2.startsWith('-')||l2.startsWith('•')){fans.push({text:l2.slice(1).trim(),tag:tagFan(l2)});}}
+if(!con){var bt=fullText.toLowerCase();if(bt.includes('traff_meta')||bt.includes('vasyl')||bt.includes(' vl'))con='VL';else con='TD';}
+return{id:Date.now()+Math.random(),con:con,model:model,date:date,subs:subs,replies:replies,revenue:revenue,raw:lines.join('\n'),fans:fans,replyRate:subs>0?+(replies/subs*100).toFixed(1):0};}
+function parseBulkChat(){var raw=document.getElementById('chatRawInput').value.trim();if(!raw){alert('Вставте звіт чатера');return;}var date=document.getElementById('chatDateInput').value||new Date().toISOString().slice(0,10);var blocks=splitBlocks(raw);var added=0;blocks.forEach(function(b){var e=parseBlock(b,date);if(e){CHAT_ENTRIES.unshift(e);added++;}});if(added===0){alert('Не вдалося розпізнати моделі.');return;}saveChatLS();document.getElementById('chatRawInput').value='';renderChat();toast('Додано '+added+' звіт(ів)');}
+function setChatFilter(btn){var cf=btn.getAttribute('data-cf'),cv=btn.getAttribute('data-cv');chatFilters[cf]=cv;document.querySelectorAll('[data-cf="'+cf+'"]').forEach(function(b){b.classList.remove('active');});btn.classList.add('active');renderChat();}
+function deleteChatEntry(id){CHAT_ENTRIES=CHAT_ENTRIES.filter(function(e){return e.id!==id;});saveChatLS();renderChat();}
+function renderChat(){
+  var filtered=CHAT_ENTRIES.filter(function(e){if(chatFilters.con!=='all'&&e.con!==chatFilters.con)return false;if(chatFilters.model!=='all'&&e.model!==chatFilters.model)return false;return true;});
+  var tS=filtered.reduce(function(a,e){return a+e.subs;},0),tR=filtered.reduce(function(a,e){return a+e.replies;},0),tRev=filtered.reduce(function(a,e){return a+e.revenue;},0),avgRR=filtered.length>0?(filtered.reduce(function(a,e){return a+e.replyRate;},0)/filtered.length):0;
+  var ppvCnt=0,hotCnt=0,coldCnt=0,crossCnt=0;filtered.forEach(function(e){e.fans.forEach(function(f){if(f.tag.tag==='ppv')ppvCnt++;if(f.tag.tag==='hot')hotCnt++;if(f.tag.tag==='cold')coldCnt++;if(f.tag.tag==='cross')crossCnt++;});});
+  document.getElementById('chatSummaryKPIs').innerHTML='<div class="kpi"><div class="kpi-l">Підписок</div><div class="kpi-v">'+tS+'</div><div class="kpi-s">'+filtered.length+' звітів</div></div><div class="kpi"><div class="kpi-l">Відповідей</div><div class="kpi-v">'+tR+'</div><div class="kpi-s">reply rate '+avgRR.toFixed(1)+'%</div></div><div class="kpi"><div class="kpi-l">Revenue</div><div class="kpi-v" style="color:'+(tRev>0?'var(--gr)':'var(--rd)')+'">$'+tRev.toFixed(2)+'</div><div class="kpi-s">загалом</div></div><div class="kpi"><div class="kpi-l">Злив після ППВ</div><div class="kpi-v" style="color:#7c3aed">'+ppvCnt+'</div><div class="kpi-s">фани</div></div><div class="kpi"><div class="kpi-l">Купили</div><div class="kpi-v" style="color:var(--gr)">'+hotCnt+'</div><div class="kpi-s">спендерів</div></div><div class="kpi"><div class="kpi-l">Холодних</div><div class="kpi-v" style="color:var(--t3)">'+coldCnt+'</div><div class="kpi-s">1 повід.</div></div>';
+  var ins=[];if(filtered.length>0){if(avgRR<10)ins.push({cls:'bad',txt:'⚠️ Reply Rate нижче 10%.'});if(ppvCnt>hotCnt*2&&ppvCnt>0)ins.push({cls:'warn',txt:'📦 Багато зливів після ППВ ('+ppvCnt+').'});if(tRev===0&&tR>5)ins.push({cls:'bad',txt:'💸 Є '+tR+' переписок але $0.'});if(hotCnt>0)ins.push({cls:'good',txt:'✅ '+hotCnt+' фан(ів) купили!'});if(crossCnt>0)ins.push({cls:'warn',txt:'🔄 '+crossCnt+' кросс-модельних фани.'});}
+  document.getElementById('chatInsights').innerHTML=ins.map(function(i){return '<div class="insight-box '+i.cls+'">'+i.txt+'</div>';}).join('');
+  if(filtered.length===0){document.getElementById('chatEntries').innerHTML='<div style="text-align:center;padding:30px;color:var(--t3);font-size:13px;">Немає звітів</div>';return;}
+  var mc={'Octokura':'#0ea5e9','Nancy Ace':'#f59e0b','Ellie Bird':'#8b5cf6','Emiri Momota':'#14b8a6','Chloe Temple':'#ec4899','Jennifer White':'#f97316','Amanda Essen':'#10b981'};
+  var conB={TD:'cbd-td',VL:'cbd-vl'};var tc={hot:'tag-hot',warm:'tag-warm',cold:'tag-cold',lost:'tag-lost',ppv:'tag-ppv',cross:'tag-cross'};
+  document.getElementById('chatEntries').innerHTML=filtered.map(function(e){
+    var rr=e.subs>0?(e.replies/e.subs*100).toFixed(1):0,rrCol=rr>=10?'var(--gr)':rr>=5?'var(--am)':'var(--rd)',col=mc[e.model]||'#98a2b3';
+    var fh=e.fans.map(function(f){return '<div class="ce-fan-row"><span class="ce-fan-tag '+(tc[f.tag.tag]||'tag-cold')+'">'+f.tag.lbl+'</span><span>'+f.text+'</span></div>';}).join('');
+    return '<div class="chat-entry"><div class="ce-hdr"><span class="cbadge '+(conB[e.con]||'')+'">'+e.con+'</span><div class="dot" style="background:'+col+'"></div><span class="ce-title">'+e.model+'</span><span class="ce-date">'+e.date+'</span><button onclick="deleteChatEntry('+e.id+')" style="font-size:11px;color:var(--t3);border:none;background:transparent;cursor:pointer;margin-left:8px;">✕</button></div><div class="ce-body"><div class="ce-kpi"><div class="ce-kpi-v">'+e.subs+'</div><div class="ce-kpi-l">Підписок</div></div><div class="ce-kpi"><div class="ce-kpi-v" style="color:'+rrCol+'">'+rr+'%</div><div class="ce-kpi-l">Reply Rate</div></div><div class="ce-kpi"><div class="ce-kpi-v" style="color:'+(e.revenue>0?'var(--gr)':'var(--rd)')+'">$'+e.revenue.toFixed(2)+'</div><div class="ce-kpi-l">Revenue</div></div></div>'+(fh?'<div class="ce-fans">'+fh+'</div>':'')+'</div>';}).join('');
+}
+
+function go(id,btn){
+  document.querySelectorAll('.tab-c').forEach(function(t){t.classList.remove('active');});
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
+  var el=document.getElementById('t-'+id);if(el)el.classList.add('active');
+  btn.classList.add('active');
+  if(id==='charts')setTimeout(renderCharts,40);
+  if(id==='fraud')setTimeout(renderFraud,10);
+}
+function updateRefs(){
+  var e;
+  e=document.getElementById('ct-td');if(e)e.textContent='Smart Links · '+names.td;
+  e=document.getElementById('ct-vl');if(e)e.textContent='Smart Links · '+names.vl;
+  e=document.getElementById('bl-td');if(e)e.textContent=names.td+' — Spend ($)';
+  e=document.getElementById('bl-vl');if(e)e.textContent=names.vl+' — Spend ($)';
+  e=document.getElementById('anTDlbl');if(e)e.textContent=names.td;
+  e=document.getElementById('anVLlbl');if(e)e.textContent=names.vl;
+}
+function renderAll(){renderKPI();renderTable(LINKS.TD,'tdBody');renderTable(LINKS.VL,'vlBody');renderBudget();renderAnalytics();updateRefs();}
+
+loadLS();
+document.getElementById('name-td').innerText=names.td;
+document.getElementById('name-vl').innerText=names.vl;
+document.getElementById('chatDateInput').value=new Date().toISOString().slice(0,10);
+buildThead('th-td');buildThead('th-vl');
+renderAll();renderChat();
+
+</script>
+</body>
+</html>
