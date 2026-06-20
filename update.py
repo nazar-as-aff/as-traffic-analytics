@@ -62,7 +62,14 @@ MSGS3 = {
 
 # ── FETCH OF API ────────────────────────────────────────────────────────────
 def api_get(url):
-    req = urllib.request.Request(url, headers={"Authorization": f"Bearer {OF_API_KEY}"})
+    req = urllib.request.Request(
+        url,
+        headers={
+            "Authorization": f"Bearer {OF_API_KEY}",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+            "Accept": "application/json",
+        },
+    )
     with urllib.request.urlopen(req, timeout=30) as r:
         return json.loads(r.read())
 
