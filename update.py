@@ -86,7 +86,7 @@ for lnk in SMART_LINKS:
     try:
         url = f"https://app.onlyfansapi.com/api/smart-links/{lnk['id']}/stats"
         data = api_get(url)
-        s = data["response"]["data"]["summary"]
+        s = data["data"]["summary"]
         entry = {
             "id": lnk["id"],
             "startDate": lnk["startDate"],
