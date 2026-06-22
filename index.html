@@ -3,14 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Traffic Meta — AS Talent Agency</title>
+<title>Traffic Analytics — AS Talent Agency</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
 :root{--bg:#f5f6f8;--white:#fff;--border:#e4e7ec;--bl:#f0f2f5;--t1:#101828;--t2:#475467;--t3:#98a2b3;--ac:#1570ef;--acbg:#eff4ff;--gr:#067647;--grbg:#ecfdf3;--rd:#b42318;--rdbg:#fef3f2;--am:#b54708;--ambg:#fffaeb;--rsm:8px;--rmd:12px;--sh:0 1px 3px rgba(16,24,40,.06);}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--t1);font-size:14px;line-height:1.5;}
-.hdr{background:var(--white);border-bottom:1px solid var(--border);padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;}
+.hdr{background:var(--white);border-bottom:1px solid var(--border);border-top:3px solid #FD4A9E;padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;}
 .hdr-l{display:flex;align-items:center;gap:12px;}
+.brand-logo{height:30px;width:auto;display:flex;align-items:center;flex-shrink:0;}
+.brand-logo svg{height:30px;width:auto;display:block;}
 .logo{font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--ac);}
 .sep{width:1px;height:16px;background:var(--border);}
 .upd{font-size:11px;color:var(--t3);background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:2px 10px;}
@@ -62,6 +64,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 .b-p{background:#f4f3ff;color:#6941c6;}
 .mn{display:flex;align-items:center;gap:7px;}
 .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.tab-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#FD4A9E;margin-right:6px;vertical-align:middle;}
 .bar-w{display:flex;align-items:center;justify-content:flex-end;gap:5px;}
 .bar-bg{height:4px;background:var(--bl);border-radius:2px;width:52px;flex-shrink:0;}
 .bar-f{height:4px;border-radius:2px;}
@@ -120,25 +123,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 .fr-ip{font-family:monospace;font-size:11px;color:var(--t3);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .fr-ua{max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--t2);font-size:11px;}
 .fr-time{color:var(--t3);font-size:11px;white-space:nowrap;}
-.chat-form-area{background:var(--white);border:1px solid var(--border);border-radius:var(--rmd);padding:16px;margin-bottom:16px;box-shadow:var(--sh);}
-.chat-form-area textarea{width:100%;min-height:160px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--rsm);font-family:inherit;font-size:13px;color:var(--t1);resize:vertical;outline:none;line-height:1.5;}
-.chat-form-area textarea:focus{border-color:var(--ac);}
-.chat-entries{display:flex;flex-direction:column;gap:12px;}
-.chat-entry{background:var(--white);border:1px solid var(--border);border-radius:var(--rmd);overflow:hidden;box-shadow:var(--sh);}
-.ce-hdr{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--bl);background:var(--bg);}
-.ce-title{font-size:13px;font-weight:600;flex:1;}.ce-date{font-size:11px;color:var(--t3);}
-.ce-body{padding:14px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
-.ce-kpi{text-align:center;padding:10px;background:var(--bg);border-radius:var(--rsm);}
-.ce-kpi-v{font-size:18px;font-weight:700;line-height:1.2;}
-.ce-kpi-l{font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--t3);margin-top:3px;}
-.ce-fans{padding:0 14px 14px;}
-.ce-fan-row{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--bl);font-size:12px;}
-.ce-fan-row:last-child{border-bottom:none;}
-.ce-fan-tag{flex-shrink:0;font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;white-space:nowrap;}
-.tag-cold{background:#f0f9ff;color:#0369a1;}.tag-warm{background:#fff7ed;color:#c2410c;}
-.tag-hot{background:#ecfdf5;color:#065f46;}.tag-lost{background:#fef2f2;color:#991b1b;}
-.tag-ppv{background:#faf5ff;color:#6b21a8;}.tag-cross{background:#fef9c3;color:#92400e;}
-.chat-summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:16px;}
+.daily-tbl-wrap{max-height:340px;overflow:auto;}
+.scope-btn{font-size:12px;font-weight:600;padding:5px 12px;border-radius:8px;border:1px solid var(--border);background:var(--white);color:var(--t2);cursor:pointer;}
+.scope-btn.active{background:var(--t1);color:#fff;border-color:var(--t1);}
+.range-inp{font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:var(--rsm);background:var(--white);color:var(--t1);outline:none;}
 .insight-box{border-left:3px solid var(--ac);background:var(--acbg);border-radius:0 var(--rsm) var(--rsm) 0;padding:10px 14px;font-size:12px;margin-bottom:8px;}
 .insight-box.warn{border-color:#f59e0b;background:#fffbeb;}
 .insight-box.good{border-color:var(--gr);background:var(--grbg);}
@@ -151,16 +139,50 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 .act-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--bl);}
 .act-inp{font-size:11px;font-weight:600;border:1px solid var(--border);border-radius:6px;padding:3px 6px;background:var(--white);outline:none;width:120px;text-align:center;cursor:pointer;color:var(--t1);}
+.mn-click{cursor:pointer;}
+.chev{flex-shrink:0;color:var(--t3);transition:transform .15s;}
+.det-wrap{padding:10px 16px 16px 36px;background:var(--bg);}
+.det-note{font-size:11px;color:var(--t3);margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.det-scroll{max-height:300px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--rsm);background:var(--white);}
+.det-tbl{width:100%;border-collapse:collapse;font-size:12px;}
+.det-tbl th{position:sticky;top:0;background:var(--white);font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--t3);padding:7px 10px;text-align:right;border-bottom:1px solid var(--border);}
+.det-tbl th:first-child{text-align:left;}
+.det-tbl td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--bl);}
+.det-tbl td:first-child{text-align:left;}
+.det-tbl tr:last-child td{border-bottom:none;}
 @media(max-width:900px){.main{padding:14px 12px 60px;}.chart-split,.p-charts,.p-kpis{grid-template-columns:1fr 1fr;}.kpi-row{grid-template-columns:repeat(2,1fr);}.panel{width:98%;max-height:94vh;}}
 </style>
 </head>
 <body>
 <header class="hdr">
   <div class="hdr-l">
-    <span class="logo">AS TALENT</span>
+    <span class="brand-logo"><svg xmlns="http://www.w3.org/2000/svg" width="231" height="133" viewBox="0 0 231 133" fill="none">
+  <g clip-path="url(#clip0_18_172)">
+    <path d="M131.273 83.8349L137.785 68.0842H141.552L148.064 83.8349H145.014L143.489 79.9866H135.803L134.277 83.8349H131.273ZM136.61 77.8036H142.551L139.585 70.4195H139.538L136.61 77.8036Z" fill="#FD4A9E"></path>
+    <path d="M155.189 84.3425C153.728 84.3612 152.288 83.988 151.022 83.264C149.795 82.5565 148.789 81.5271 148.114 80.2884C147.413 78.9537 147.046 77.4695 147.046 75.9637C147.046 74.4578 147.413 72.9744 148.114 71.6389C148.817 70.3916 149.855 69.3619 151.112 68.6638C152.439 67.9275 153.938 67.5528 155.459 67.578C156.726 67.551 157.983 67.8051 159.139 68.3217C160.211 68.8128 161.143 69.565 161.844 70.5084C162.551 71.4713 163.023 72.5838 163.223 73.7583H160.345C160.101 72.6827 159.486 71.7254 158.607 71.0513C157.691 70.3719 156.571 70.0207 155.429 70.0547C154.416 70.0301 153.416 70.2878 152.543 70.7985C151.703 71.3038 151.023 72.033 150.579 72.9029C150.081 73.8486 149.823 74.9003 149.83 75.9673C149.819 77.0494 150.076 78.117 150.579 79.0764C151.034 79.9556 151.73 80.6883 152.588 81.1886C153.471 81.6968 154.477 81.9538 155.496 81.9328C156.348 81.9437 157.191 81.7632 157.962 81.4044C158.699 81.0608 159.346 80.5512 159.851 79.9166C160.366 79.2655 160.716 78.4996 160.87 77.6853H155.586V75.3876H163.329V83.9259H160.982V81.6203C160.337 82.4598 159.496 83.1312 158.532 83.5766C157.489 84.0761 156.347 84.3381 155.189 84.3425Z" fill="#FD4A9E"></path>
+    <path d="M165.873 83.8349V68.0842H176.265V70.4705H168.619V74.7631H173.993V77.1489H168.619V81.4491H177.066V83.8349H165.873Z" fill="#FD4A9E"></path>
+    <path d="M178.593 83.8349V68.0842H181.506L190.268 79.9425V68.0842H192.84V83.8349H189.941L181.231 71.9255V83.806L178.593 83.8349Z" fill="#FD4A9E"></path>
+    <path d="M203.465 84.3417C202.016 84.3634 200.587 83.9909 199.323 83.2625C198.105 82.5645 197.1 81.5336 196.421 80.2841C195.739 78.9501 195.383 77.4673 195.383 75.9615C195.383 74.4557 195.739 72.9722 196.421 71.639C197.099 70.3886 198.104 69.3572 199.323 68.6606C200.527 67.9887 201.869 67.6183 203.24 67.5794C204.61 67.5407 205.97 67.8345 207.209 68.4372C208.296 68.99 209.226 69.8209 209.908 70.8497C210.605 71.897 211.032 73.1086 211.149 74.3719H208.428C208.301 73.5641 207.99 72.799 207.522 72.1378C207.073 71.5041 206.48 70.9928 205.794 70.6486C205.076 70.3005 204.289 70.1248 203.494 70.1349C202.526 70.1198 201.573 70.3774 200.737 70.8795C199.929 71.3675 199.274 72.0834 198.851 72.9419C198.407 73.8861 198.176 74.9205 198.176 75.9687C198.176 77.0169 198.407 78.0513 198.851 78.9955C199.276 79.8531 199.931 80.5685 200.737 81.0579C201.508 81.5019 202.369 81.7531 203.252 81.7906C204.135 81.8282 205.013 81.6513 205.817 81.2745C206.504 80.9367 207.096 80.4241 207.536 79.7853C207.997 79.1204 208.302 78.356 208.428 77.5511H211.156C211.025 78.8151 210.589 80.0256 209.886 81.0731C209.197 82.0967 208.266 82.924 207.18 83.4784C206.027 84.066 204.753 84.362 203.465 84.3417Z" fill="#FD4A9E"></path>
+    <path d="M216.116 83.8349V78.1386L209.122 68.0842H212.473L217.597 75.4395L222.675 68.0842H225.912L218.948 78.1386V83.8349H216.116Z" fill="#FD4A9E"></path>
+    <path d="M117.531 70.6248C116.985 70.6283 116.448 70.4912 115.97 70.2265C115.515 69.9673 115.137 69.5904 114.878 69.1354C114.618 68.6564 114.482 68.12 114.482 67.575C114.482 67.0301 114.618 66.4939 114.878 66.0148C115.137 65.5598 115.515 65.1829 115.97 64.9236C116.449 64.6639 116.986 64.5278 117.531 64.5278C118.076 64.5278 118.613 64.6639 119.093 64.9236C119.55 65.1807 119.927 65.5581 120.184 66.0148C120.449 66.4923 120.588 67.0291 120.588 67.575C120.588 68.121 120.449 68.658 120.184 69.1354C119.927 69.5921 119.55 69.9695 119.093 70.2265C118.615 70.4912 118.077 70.6283 117.531 70.6248ZM117.531 70.3029C118.021 70.3088 118.503 70.1845 118.929 69.9428C119.342 69.7098 119.684 69.3683 119.917 68.9553C120.153 68.5278 120.277 68.0472 120.277 67.5586C120.277 67.0701 120.153 66.5897 119.917 66.1621C119.686 65.7459 119.344 65.4021 118.929 65.1691C118.501 64.9327 118.02 64.8087 117.531 64.8087C117.042 64.8087 116.562 64.9327 116.134 65.1691C115.719 65.4006 115.377 65.7425 115.145 66.1567C114.909 66.5842 114.785 67.0648 114.785 67.5534C114.785 68.0418 114.909 68.5223 115.145 68.9499C115.379 69.3629 115.721 69.7043 116.134 69.9374C116.558 70.1848 117.04 70.3147 117.531 70.3138V70.3029ZM116.183 69.2117V65.7365H117.548C117.904 65.7182 118.255 65.8201 118.547 66.0257C118.667 66.1211 118.762 66.2434 118.825 66.3828C118.889 66.5222 118.919 66.6746 118.912 66.8277C118.918 67.0503 118.855 67.2692 118.732 67.455C118.61 67.6357 118.435 67.7732 118.23 67.8478L119.251 69.2117H118.383L117.465 67.9679H116.849V69.2117H116.183ZM117.564 67.3732C117.735 67.382 117.904 67.334 118.044 67.2369C118.099 67.1909 118.143 67.1332 118.172 67.068C118.201 67.0028 118.215 66.9319 118.213 66.8604C118.215 66.7915 118.2 66.7232 118.171 66.6608C118.141 66.5984 118.098 66.5435 118.044 66.5003C117.904 66.4031 117.735 66.3552 117.564 66.3639H116.866V67.3732H117.564Z" fill="#05021D"></path>
+    <path d="M136.105 64.1104V57.7212H133.308V56.4783H140.167V57.7212H137.381V64.1104H136.105Z" fill="#FD4A9E"></path>
+    <path d="M139.537 64.1104L142.472 56.4783H144.174L147.108 64.1104H145.726L145.035 62.246H141.568L140.877 64.1104H139.537ZM141.962 61.1884H144.641L143.302 57.6122H143.28L141.962 61.1884Z" fill="#FD4A9E"></path>
+    <path d="M148.014 64.1104V56.4783H149.29V62.8674H153.119V64.1104H148.014Z" fill="#FD4A9E"></path>
+    <path d="M154.235 64.1104V56.4783H159.031V57.634H155.489V59.7165H157.978V60.8722H155.489V62.9547H159.403V64.1104H154.235Z" fill="#FD4A9E"></path>
+    <path d="M160.57 64.1104V56.4783H161.921L165.972 62.2242V56.4783H167.163V64.1104H165.823L161.793 58.3536V64.1104H160.57Z" fill="#FD4A9E"></path>
+    <path d="M170.969 64.1104V57.7212H168.171V56.4783H175.031V57.7212H172.244V64.1104H170.969Z" fill="#FD4A9E"></path>
+    <path d="M156.358 29.8998C154.631 29.2964 152.667 29.329 150.801 29.1986C138.196 28.2772 125.585 27.478 112.997 26.4344C111.47 26.2564 109.955 25.9841 108.462 25.6189C107.644 25.4232 106.826 25.1949 106.056 24.9829C105.47 24.7647 104.86 24.6142 104.239 24.5345C105.164 23.833 106.17 23.2444 107.235 22.7814C108.446 22.1698 109.69 21.6235 110.967 21.1506C113.496 20.1558 116.098 19.3486 118.693 18.5495C126.272 16.2011 134.023 13.7548 141.609 11.6593C141.921 11.5777 146.463 10.4199 146.422 10.2324C145.244 4.78548 142.215 4.52457 138.778 5.56013C126.28 9.47405 113.807 13.445 101.383 17.5628C98.9409 18.4239 96.6403 19.6413 94.5569 21.1751C91.0212 23.6946 91.2832 26.7523 95.2037 28.5136C97.7173 29.7507 100.414 30.5766 103.192 30.9599C115.771 32.1014 128.383 32.9168 140.971 33.9198C142.731 34.0584 144.458 34.5557 147.052 35.0532C138.721 42.4407 131.428 49.6732 123.317 55.9029C109.289 66.7232 94.5656 76.6631 80.5454 87.4912C72.6141 93.6149 65.2975 100.538 58.087 107.534C54.0683 111.416 54.1419 114.97 57.0065 118.893C61.3116 113.821 65.1909 108.349 70.0035 103.783C76.9078 97.1564 84.1822 90.9223 91.7907 85.1105C105.909 74.3798 120.436 64.171 134.711 53.6361C142.412 47.9283 150.024 42.1553 157.488 36.1621C160.271 33.8708 159.681 31.0414 156.358 29.8998Z" fill="#FD4A9E"></path>
+    <path d="M76.2379 53.0302C83.539 51.4911 90.6516 49.0399 97.8054 46.8412C99.5827 46.2572 101.271 45.4353 102.826 44.3981C105.867 42.4356 105.123 40.3264 102.596 37.8833C92.9169 42.7694 82.9745 46.8412 71.7575 49.0155C75.6734 40.2206 79.2792 32.3866 82.6475 24.4548C85.0022 18.901 87.0711 13.225 89.1884 7.56532C90.3412 4.46265 90.5044 1.56355 86.4171 0C85.7544 0.561899 84.7813 1.00981 84.4139 1.75086C80.5057 9.36503 74.4722 15.497 70.1796 22.9239C64.1377 33.3963 56.2806 42.8021 49.5356 52.8999C47.7777 55.5385 45.8237 56.5563 42.9294 57.3218C30.265 60.6851 17.6986 64.3985 5.06695 67.9083C2.70413 68.5598 -0.0511377 68.9751 0.979022 72.1754C2.00918 75.376 4.57635 74.3907 6.85742 73.5194C7.51147 73.2667 8.13293 72.9087 8.80334 72.7051L41.9647 62.1183L42.7823 63.1281C39.9452 67.2975 37.0591 71.4344 34.2875 75.6366C23.1901 92.3957 12.1228 109.179 1.08541 125.987C-0.279958 128.064 -0.966836 130.319 2.81859 132.103C3.99502 130.534 5.08667 128.902 6.08894 127.217C16.8891 107.312 28.722 87.9807 41.5396 69.3008C43.8533 65.9213 45.3903 61.5239 50.2631 60.4245C53.6725 59.7731 60.5075 57.9814 62.5269 57.8511C61.8238 59.944 61.4396 61.5401 60.7692 62.9977C56.8693 71.4995 52.863 79.9527 48.9713 88.4542C47.8921 90.8155 45.9055 93.2511 49.2984 96.8662C50.8273 94.4234 52.2907 92.4693 53.2718 90.352C57.5477 81.0276 61.8238 71.695 65.8136 62.2486C67.9148 57.387 70.7028 54.2028 76.2379 53.0302ZM52.9612 55.0579L52.7323 55.1068C52.8467 52.11 55.1279 50.1149 56.673 47.7777C60.761 41.5398 64.8489 35.2611 69.1413 29.1129C70.7765 26.7594 72.4936 24.4549 74.2181 22.1584C75.036 21.0427 75.7882 19.8374 76.614 18.7137C76.9865 18.0477 77.4615 17.4433 78.0203 16.9221C80.9879 14.9759 78.7479 20.2936 78.4043 21.1405L75.2403 28.9826C73.131 34.2025 69.4355 43.258 67.3834 48.5268C65.789 52.6474 57.9321 54.3739 52.9939 55.0905L52.9612 55.0579Z" fill="#FD4A9E"></path>
+  </g>
+  <defs>
+    <clipPath id="clip0_18_172">
+      <rect width="231" height="132.103" fill="white"></rect>
+    </clipPath>
+  </defs>
+</svg></span>
     <div class="sep"></div>
-    <span style="font-size:14px;font-weight:600;">Traffic Meta</span>
-    <span class="upd">June 19, 2026 · 4 TD + 5 VL</span>
+    <span style="font-size:14px;font-weight:600;">Traffic Analytics</span>
+    <span class="upd">June 19, 2026, 12:00 UTC</span>
   </div>
   <div style="display:flex;gap:6px;align-items:center;">
     <span class="sbadge sm">Meta Ads</span>
@@ -169,16 +191,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 </header>
 <main class="main">
   <div class="page-h">
-    <h1>Traffic Meta Dashboard</h1>
+    <h1>Traffic Analytics Dashboard</h1>
     <p>Smart Links data from OF API (live) &middot; Meta budget — manual entry &middot; Breakdown by contractor</p>
   </div>
   <div class="tabs">
-    <button class="tab active" onclick="go('overview',this)">Overview</button>
-    <button class="tab" onclick="go('budget',this)">Meta Budget</button>
-    <button class="tab" onclick="go('analytics',this)">Model Analytics</button>
-    <button class="tab" onclick="go('charts',this)">Charts</button>
-    <button class="tab" onclick="go('fraud',this)">&#x1F6E1; Fraud Detection</button>
-    <button class="tab" onclick="go('chat',this)">&#x1F4AC; Chat Analysis</button>
+    <button class="tab active" onclick="go('overview',this)"><span class="tab-dot"></span>Overview</button>
+    <button class="tab" onclick="go('analytics',this)"><span class="tab-dot"></span>Model data</button>
+    <button class="tab" onclick="go('fraud',this)"><span class="tab-dot"></span>Fraud Detection</button>
+    <button class="tab" onclick="go('analysis',this)"><span class="tab-dot"></span>Analysis</button>
+    <button class="tab" onclick="go('budget',this)"><span class="tab-dot"></span>Meta Budget</button>
   </div>
   <!-- OVERVIEW -->
   <div id="t-overview" class="tab-c active">
@@ -209,23 +230,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
     </div>
     <p class="note">&#x26A1; Data pulled directly from OF API. CPC &middot; CPF &middot; ROAS are calculated using the Meta Spend you enter manually.</p>
   </div>
-  <!-- BUDGET -->
-  <div id="t-budget" class="tab-c">
-    <div class="card">
-      <div class="card-hdr">
-        <div><div class="card-t">Meta Ads Budget — manual entry</div><div class="card-s">Enter values from Meta Ads Manager. Saved in your browser.</div></div>
-        <div style="display:flex;gap:8px;"><button class="btn btn-g" onclick="resetBudget()">Reset</button><button class="btn btn-p" onclick="saveBudget()">Save</button></div>
-      </div>
-      <div style="padding:16px;">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;"><span class="cbadge cbd-td">TD</span><span class="sec-lbl" style="margin:0;" id="bl-td">Traffic Devils — Spend ($)</span></div>
-        <div class="bg-grid" id="bgTD"></div>
-        <div class="divider"></div>
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;"><span class="cbadge cbd-vl">VL</span><span class="sec-lbl" style="margin:0;" id="bl-vl">Vasyl Lev — Spend ($)</span></div>
-        <div class="bg-grid" id="bgVL"></div>
-        <div class="info-box"><strong>How to update:</strong> Open Meta Ads Manager &#x2192; copy the Spend for the period &#x2192; paste it here &#x2192; click "Save".</div>
-      </div>
-    </div>
-  </div>
   <!-- ANALYTICS -->
   <div id="t-analytics" class="tab-c">
     <div class="kpi-row" style="margin-bottom:16px;">
@@ -250,30 +254,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
     </div>
   </div>
   <!-- CHARTS -->
-  <div id="t-charts" class="tab-c">
-    <div class="chart-split" style="margin-bottom:4px;">
-      <div class="card"><div class="card-hdr"><div class="card-t">CR% &middot; Traffic Devils</div><span class="cbadge cbd-td">TD</span></div><div style="padding:14px;"><div class="chart-wrap"><canvas id="cCR_td"></canvas></div></div></div>
-      <div class="card"><div class="card-hdr"><div class="card-t">CR% &middot; Vasyl Lev</div><span class="cbadge cbd-vl">VL</span></div><div style="padding:14px;"><div class="chart-wrap"><canvas id="cCR_vl"></canvas></div></div></div>
-    </div>
-    <div class="chart-split" style="margin-bottom:4px;">
-      <div class="card"><div class="card-hdr"><div class="card-t">Subscriptions &middot; Traffic Devils</div></div><div style="padding:14px;"><div class="chart-wrap"><canvas id="cSubs_td"></canvas></div></div></div>
-      <div class="card"><div class="card-hdr"><div class="card-t">Subscriptions &middot; Vasyl Lev</div></div><div style="padding:14px;"><div class="chart-wrap"><canvas id="cSubs_vl"></canvas></div></div></div>
-    </div>
-    <div class="chart-split" style="margin-bottom:4px;">
-      <div class="card"><div class="card-hdr"><div class="card-t">Fans 3+ msg &middot; Traffic Devils</div></div><div style="padding:16px;" id="msgs_td_chart"></div></div>
-      <div class="card"><div class="card-hdr"><div class="card-t">Fans 3+ msg &middot; Vasyl Lev</div></div><div style="padding:16px;" id="msgs_vl_chart"></div></div>
-    </div>
-    <div class="chart-split">
-      <div class="card">
-        <div class="card-hdr"><div class="card-t">Activity Status &middot; Traffic Devils</div><div class="card-s">Start date &amp; stop date per model</div></div>
-        <div style="padding:14px;" id="act_td"></div>
-      </div>
-      <div class="card">
-        <div class="card-hdr"><div class="card-t">Activity Status &middot; Vasyl Lev</div><div class="card-s">Start date &amp; stop date per model</div></div>
-        <div style="padding:14px;" id="act_vl"></div>
-      </div>
-    </div>
-  </div>
   <!-- FRAUD -->
   <div id="t-fraud" class="tab-c">
     <div class="fr-kpi-grid" id="fraudKPIs"></div>
@@ -323,38 +303,45 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
       </div>
     </div>
   </div>
-  <!-- CHAT -->
-  <div id="t-chat" class="tab-c">
-    <div class="chat-summary-grid" id="chatSummaryKPIs"></div>
-    <div id="chatInsights" style="margin-bottom:16px;"></div>
-    <div class="chat-form-area" style="margin-bottom:16px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-        <div>
-          <div style="font-size:13px;font-weight:600;">&#x2795; Paste the chatter summary report</div>
-          <div style="font-size:11px;color:var(--t3);margin-top:2px;">Paste the whole report — the system will auto-split it by model and contractor</div>
-        </div>
-        <input id="chatDateInput" type="date" style="font-size:12px;padding:4px 8px;border:1px solid var(--border);border-radius:var(--rsm);background:var(--white);color:var(--t1);outline:none;">
-      </div>
-      <textarea id="chatRawInput" placeholder="Paste the chatter report here"></textarea>
-      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;">
-        <button class="btn btn-g" onclick="document.getElementById('chatRawInput').value=''">Clear</button>
-        <button class="btn btn-p" onclick="parseBulkChat()">Parse</button>
-      </div>
-    </div>
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+  <!-- ANALYSIS -->
+  <div id="t-analysis" class="tab-c">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;padding:10px 14px;background:var(--white);border:1px solid var(--border);border-radius:var(--rmd);box-shadow:var(--sh);">
       <span style="font-size:11px;color:var(--t3);font-weight:600;">Contractor:</span>
-      <button class="fr-btn active" data-cf="con" data-cv="all" onclick="setChatFilter(this)">All</button>
-      <button class="fr-btn" data-cf="con" data-cv="TD" onclick="setChatFilter(this)">TD</button>
-      <button class="fr-btn" data-cf="con" data-cv="VL" onclick="setChatFilter(this)">VL</button>
-      <span style="font-size:11px;color:var(--t3);font-weight:600;margin-left:8px;">Model:</span>
-      <button class="fr-btn active" data-cf="model" data-cv="all" onclick="setChatFilter(this)">All</button>
-      <button class="fr-btn" data-cf="model" data-cv="Nancy Ace" onclick="setChatFilter(this)">Nancy Ace</button>
-      <button class="fr-btn" data-cf="model" data-cv="Jennifer White" onclick="setChatFilter(this)">Jennifer</button>
-      <button class="fr-btn" data-cf="model" data-cv="Chloe Temple" onclick="setChatFilter(this)">Chloe</button>
-      <button class="fr-btn" data-cf="model" data-cv="Amanda Essen" onclick="setChatFilter(this)">Amanda</button>
-      <button class="btn btn-g" style="margin-left:auto;font-size:11px;padding:3px 10px;" onclick="if(confirm('Delete all reports?')){CHAT_ENTRIES=[];saveChatLS();renderChat();}">Clear all</button>
+      <button class="scope-btn active" data-congroup data-scope="all" onclick="setAnalysisCon('all',this)">All</button>
+      <button class="scope-btn" data-congroup data-scope="TD" onclick="setAnalysisCon('TD',this)">Traffic Devils</button>
+      <button class="scope-btn" data-congroup data-scope="VL" onclick="setAnalysisCon('VL',this)">Vasyl Lev</button>
+      <span id="anModelLabel" style="font-size:11px;color:var(--t3);font-weight:600;margin-left:4px;"></span>
+      <span id="analysisModelBtns" style="display:inline-flex;gap:6px;flex-wrap:wrap;"></span>
     </div>
-    <div class="chat-entries" id="chatEntries"><div style="text-align:center;padding:30px;color:var(--t3);font-size:13px;">Add your first chatter report above &#x2191;</div></div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap;padding:10px 14px;background:var(--white);border:1px solid var(--border);border-radius:var(--rmd);box-shadow:var(--sh);">
+      <span style="font-size:11px;color:var(--t3);font-weight:600;">Period:</span>
+      <input type="date" class="range-inp" id="anFrom" onchange="renderAnalysis()">
+      <span style="color:var(--t3);font-size:12px;">&ndash;</span>
+      <input type="date" class="range-inp" id="anTo" onchange="renderAnalysis()">
+      <button class="btn btn-g" style="font-size:11px;padding:5px 10px;" onclick="document.getElementById('anFrom').value='';document.getElementById('anTo').value='';renderAnalysis();">Full period</button>
+      <span style="font-size:11px;color:var(--t3);font-weight:600;margin-left:4px;">Target CPF $</span>
+      <input type="number" class="range-inp" id="anTarget" value="1.50" step="0.01" style="width:64px;" onchange="saveAnTarget();renderAnalysis()">
+      <button class="btn btn-g" style="font-size:11px;padding:5px 10px;margin-left:auto;" onclick="window.print()">&#x1F5A8; Print report</button>
+    </div>
+    <div class="kpi-row" id="anKPIs" style="margin-bottom:16px;"></div>
+    <div id="anContent"></div>
+  </div>
+  <!-- BUDGET -->
+  <div id="t-budget" class="tab-c">
+    <div class="card">
+      <div class="card-hdr">
+        <div><div class="card-t">Meta Ads Budget — manual entry</div><div class="card-s">Enter values from Meta Ads Manager. Saved in your browser.</div></div>
+        <div style="display:flex;gap:8px;"><button class="btn btn-g" onclick="resetBudget()">Reset</button><button class="btn btn-p" onclick="saveBudget()">Save</button></div>
+      </div>
+      <div style="padding:16px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;"><span class="cbadge cbd-td">TD</span><span class="sec-lbl" style="margin:0;" id="bl-td">Traffic Devils — Spend ($)</span></div>
+        <div class="bg-grid" id="bgTD"></div>
+        <div class="divider"></div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;"><span class="cbadge cbd-vl">VL</span><span class="sec-lbl" style="margin:0;" id="bl-vl">Vasyl Lev — Spend ($)</span></div>
+        <div class="bg-grid" id="bgVL"></div>
+        <div class="info-box"><strong>How to update:</strong> Open Meta Ads Manager &#x2192; copy the Spend for the period &#x2192; paste it here &#x2192; click "Save".</div>
+      </div>
+    </div>
   </div>
 </main>
 <!-- MODEL PANEL -->
@@ -371,17 +358,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 <script>
 var LINKS = {
   TD: [
-    {id:'01KSPXD1G50JJQ6XYRPR1FD5GN',startDate:'2026-05-29',model:'Octokura',color:'#0ea5e9',clicks:2065,subs:557,spenders:3,revenue:35.76,msgs3:17,geo:[{c: "US", n: 39, s: 42.9}, {c: "GB", n: 16, s: 17.6}, {c: "AU", n: 15, s: 16.5}, {c: "FR", n: 9, s: 9.9}, {c: "CA", n: 6, s: 6.6}, {c: "Other", n: 6, s: 6.6}],devs:[{d: "Mobile", n: 62, s: 68.1, cl: "#1570ef"}, {d: "Bot", n: 28, s: 30.8, cl: "#f04438"}, {d: "Desktop", n: 1, s: 1.1, cl: "#10b981"}]},
-    {id:'01KT4EBCJW9Z7T73718FWF1GNS',startDate:'2026-06-02',model:'Nancy Ace',color:'#f59e0b',clicks:1751,subs:448,spenders:1,revenue:15.99,msgs3:8,geo:[{c: "US", n: 28, s: 40.6}, {c: "GB", n: 15, s: 21.7}, {c: "CA", n: 12, s: 17.4}, {c: "AU", n: 8, s: 11.6}, {c: "Other", n: 6, s: 8.7}],devs:[{d: "Mobile", n: 52, s: 75.4, cl: "#1570ef"}, {d: "Bot", n: 15, s: 21.7, cl: "#f04438"}, {d: "Desktop", n: 2, s: 2.9, cl: "#10b981"}]},
-    {id:'01KT736WE764G4R2JMXQEYHHXD',startDate:'2026-06-03',model:'Ellie Bird',color:'#8b5cf6',clicks:1305,subs:54,spenders:0,revenue:0,msgs3:1,geo:[{c: "US", n: 22, s: 37.3}, {c: "GB", n: 14, s: 23.7}, {c: "CA", n: 10, s: 16.9}, {c: "AU", n: 7, s: 11.9}, {c: "Other", n: 6, s: 10.2}],devs:[{d: "Mobile", n: 34, s: 68.0, cl: "#1570ef"}, {d: "Bot", n: 16, s: 32.0, cl: "#f04438"}]},
-    {id:'01KTXGC29Y0KVDMDWJDYTA5KW7',startDate:'2026-06-12',model:'Emiri Momota',color:'#14b8a6',clicks:1208,subs:504,spenders:2,revenue:234.38,msgs3:1,geo:[{c: "US", n: 40, s: 64.5}, {c: "UA", n: 1, s: 1.6}, {c: "PL", n: 1, s: 1.6}, {c: "Other", n: 20, s: 32.3}],devs:[{d: "Mobile", n: 2, s: 66.7, cl: "#1570ef"}, {d: "Desktop", n: 1, s: 33.3, cl: "#10b981"}]}
+    {id:'01KSPXD1G50JJQ6XYRPR1FD5GN',startDate:'2026-05-29',model:'Octokura',color:'#0ea5e9',clicks:2065,subs:557,spenders:3,revenue:35.76,msgs3:17,geo:[{c: "US", n: 39, s: 42.9}, {c: "GB", n: 16, s: 17.6}, {c: "AU", n: 15, s: 16.5}, {c: "FR", n: 9, s: 9.9}, {c: "CA", n: 6, s: 6.6}, {c: "Other", n: 6, s: 6.6}],devs:[{d: "Mobile", n: 62, s: 68.1, cl: "#1570ef"}, {d: "Bot", n: 28, s: 30.8, cl: "#f04438"}, {d: "Desktop", n: 1, s: 1.1, cl: "#10b981"}],daily:[{d:"2026-05-29",c:12,s:0,sp:0,r:0},{d:"2026-05-31",c:1,s:0,sp:0,r:0},{d:"2026-06-01",c:693,s:87,sp:0,r:0},{d:"2026-06-02",c:891,s:182,sp:1,r:11.92},{d:"2026-06-03",c:346,s:46,sp:0,r:0},{d:"2026-06-04",c:530,s:57,sp:0,r:0},{d:"2026-06-05",c:582,s:58,sp:2,r:23.84},{d:"2026-06-06",c:1745,s:110,sp:0,r:0},{d:"2026-06-07",c:199,s:17,sp:0,r:0},{d:"2026-06-08",c:3,s:0,sp:0,r:0},{d:"2026-06-09",c:6,s:0,sp:0,r:0},{d:"2026-06-10",c:9,s:0,sp:0,r:0},{d:"2026-06-11",c:5,s:0,sp:0,r:0},{d:"2026-06-12",c:1,s:0,sp:0,r:0},{d:"2026-06-13",c:1,s:0,sp:0,r:0},{d:"2026-06-14",c:1,s:0,sp:0,r:0},{d:"2026-06-15",c:3,s:0,sp:0,r:0},{d:"2026-06-16",c:1,s:0,sp:0,r:0},{d:"2026-06-17",c:2,s:0,sp:0,r:0},{d:"2026-06-18",c:1,s:0,sp:0,r:0},{d:"2026-06-19",c:4,s:0,sp:0,r:0},{d:"2026-06-20",c:5,s:0,sp:0,r:0},{d:"2026-06-21",c:1,s:0,sp:0,r:0}]},
+    {id:'01KT4EBCJW9Z7T73718FWF1GNS',startDate:'2026-06-02',model:'Nancy Ace',color:'#f59e0b',clicks:1751,subs:448,spenders:1,revenue:15.99,msgs3:8,geo:[{c: "US", n: 28, s: 40.6}, {c: "GB", n: 15, s: 21.7}, {c: "CA", n: 12, s: 17.4}, {c: "AU", n: 8, s: 11.6}, {c: "Other", n: 6, s: 8.7}],devs:[{d: "Mobile", n: 52, s: 75.4, cl: "#1570ef"}, {d: "Bot", n: 15, s: 21.7, cl: "#f04438"}, {d: "Desktop", n: 2, s: 2.9, cl: "#10b981"}],daily:[{d:"2026-06-02",c:2,s:0,sp:0,r:0},{d:"2026-06-03",c:46,s:0,sp:0,r:0},{d:"2026-06-04",c:44,s:0,sp:0,r:0},{d:"2026-06-05",c:572,s:63,sp:0,r:0},{d:"2026-06-06",c:9,s:5,sp:0,r:0},{d:"2026-06-09",c:2,s:1,sp:0,r:0},{d:"2026-06-10",c:1,s:0,sp:0,r:0},{d:"2026-06-14",c:476,s:91,sp:0,r:0},{d:"2026-06-15",c:137,s:15,sp:0,r:0},{d:"2026-06-16",c:311,s:39,sp:1,r:15.99},{d:"2026-06-17",c:788,s:234,sp:0,r:0},{d:"2026-06-18",c:3,s:0,sp:0,r:0},{d:"2026-06-19",c:1,s:0,sp:0,r:0},{d:"2026-06-21",c:1,s:0,sp:0,r:0}]},
+    {id:'01KT736WE764G4R2JMXQEYHHXD',startDate:'2026-06-03',model:'Ellie Bird',color:'#8b5cf6',clicks:1305,subs:54,spenders:0,revenue:0,msgs3:1,geo:[{c: "US", n: 22, s: 37.3}, {c: "GB", n: 14, s: 23.7}, {c: "CA", n: 10, s: 16.9}, {c: "AU", n: 7, s: 11.9}, {c: "Other", n: 6, s: 10.2}],devs:[{d: "Mobile", n: 34, s: 68.0, cl: "#1570ef"}, {d: "Bot", n: 16, s: 32.0, cl: "#f04438"}],daily:[{d:"2026-06-03",c:2,s:0,sp:0,r:0},{d:"2026-06-04",c:330,s:6,sp:0,r:0},{d:"2026-06-05",c:300,s:3,sp:0,r:0},{d:"2026-06-06",c:188,s:9,sp:0,r:0},{d:"2026-06-07",c:1,s:0,sp:0,r:0},{d:"2026-06-10",c:1,s:0,sp:0,r:0},{d:"2026-06-12",c:15,s:0,sp:0,r:0},{d:"2026-06-14",c:143,s:35,sp:0,r:0},{d:"2026-06-15",c:619,s:0,sp:0,r:0},{d:"2026-06-16",c:82,s:1,sp:0,r:0},{d:"2026-06-17",c:3,s:0,sp:0,r:0},{d:"2026-06-18",c:1,s:0,sp:0,r:0},{d:"2026-06-19",c:1,s:0,sp:0,r:0},{d:"2026-06-20",c:2,s:0,sp:0,r:0}]},
+    {id:'01KTXGC29Y0KVDMDWJDYTA5KW7',startDate:'2026-06-12',model:'Emiri Momota',color:'#14b8a6',clicks:1208,subs:504,spenders:2,revenue:234.38,msgs3:1,geo:[{c: "US", n: 40, s: 64.5}, {c: "UA", n: 1, s: 1.6}, {c: "PL", n: 1, s: 1.6}, {c: "Other", n: 20, s: 32.3}],devs:[{d: "Mobile", n: 2, s: 66.7, cl: "#1570ef"}, {d: "Desktop", n: 1, s: 33.3, cl: "#10b981"}],daily:[{d:"2026-06-12",c:14,s:1,sp:0,r:0},{d:"2026-06-13",c:201,s:22,sp:0,r:0},{d:"2026-06-14",c:165,s:67,sp:0,r:0},{d:"2026-06-15",c:188,s:48,sp:0,r:0},{d:"2026-06-16",c:372,s:98,sp:1,r:214.38},{d:"2026-06-17",c:603,s:268,sp:0,r:0},{d:"2026-06-18",c:1,s:0,sp:0,r:0},{d:"2026-06-19",c:1,s:0,sp:1,r:20.00},{d:"2026-06-21",c:1,s:0,sp:0,r:0}]}
   ],
   VL: [
-    {id:'01KTBSPQBQVM77HR203WHWXZB7',startDate:'2026-06-05',model:'Chloe Temple',color:'#ec4899',clicks:2516,subs:208,spenders:0,revenue:0,msgs3:7,geo:[{c: "US", n: 609, s: 52.5}, {c: "GB", n: 321, s: 27.6}, {c: "CA", n: 215, s: 18.5}, {c: "NL", n: 3, s: 0.3}, {c: "Other", n: 6, s: 0.5}],devs:[{d: "Mobile", n: 1466, s: 100, cl: "#1570ef"}]},
-    {id:'01KTBS3785SXY0E748E84XFQP7',startDate:'2026-06-05',model:'Jennifer White',color:'#f97316',clicks:3301,subs:292,spenders:5,revenue:172.83,msgs3:11,geo:[{c: "US", n: 52, s: 38.2}, {c: "GB", n: 42, s: 30.9}, {c: "CA", n: 28, s: 20.6}, {c: "AU", n: 12, s: 8.8}, {c: "Other", n: 6, s: 1.5}],devs:[{d: "Mobile", n: 1800, s: 80.2, cl: "#1570ef"}, {d: "Bot", n: 400, s: 17.8, cl: "#f04438"}, {d: "Desktop", n: 44, s: 2.0, cl: "#10b981"}]},
-    {id:'01KTBQYWGAVZ1EAP0ABZE9V784',startDate:'2026-06-05',model:'Amanda Essen',color:'#10b981',clicks:2970,subs:417,spenders:1,revenue:88.79,msgs3:14,geo:[{c: "US", n: 88, s: 50.3}, {c: "GB", n: 42, s: 24.0}, {c: "CA", n: 28, s: 16.0}, {c: "AU", n: 12, s: 6.9}, {c: "Other", n: 5, s: 2.9}],devs:[{d: "Mobile", n: 148, s: 79.6, cl: "#1570ef"}, {d: "Bot", n: 32, s: 17.2, cl: "#f04438"}, {d: "Desktop", n: 6, s: 3.2, cl: "#10b981"}]},
-    {id:'01KTBQV7R1AAMDWY0NEQ7VC9CM',startDate:'2026-06-05',model:'Ellie Bird',color:'#8b5cf6',clicks:4167,subs:268,spenders:0,revenue:0,msgs3:15,geo:[{c: "US", n: 88, s: 50.3}, {c: "GB", n: 42, s: 24.0}, {c: "CA", n: 28, s: 16.0}, {c: "AU", n: 12, s: 6.9}, {c: "Other", n: 5, s: 2.9}],devs:[{d: "Mobile", n: 136, s: 77.7, cl: "#1570ef"}, {d: "Bot", n: 35, s: 20.0, cl: "#f04438"}, {d: "Desktop", n: 4, s: 2.3, cl: "#10b981"}]},
-    {id:'01KT47TPJJBK10C1WKH36H91X6',startDate:'2026-06-03',model:'Nancy Ace',color:'#f59e0b',clicks:4148,subs:317,spenders:0,revenue:0,msgs3:8,geo:[{c: "US", n: 30, s: 41.7}, {c: "GB", n: 18, s: 25.0}, {c: "CA", n: 14, s: 19.4}, {c: "AU", n: 6, s: 8.3}, {c: "Other", n: 4, s: 5.6}],devs:[{d: "Mobile", n: 57, s: 79.2, cl: "#1570ef"}, {d: "Bot", n: 13, s: 18.1, cl: "#f04438"}, {d: "Desktop", n: 2, s: 2.8, cl: "#10b981"}]}
+    {id:'01KTBSPQBQVM77HR203WHWXZB7',startDate:'2026-06-05',model:'Chloe Temple',color:'#ec4899',clicks:2454,subs:190,spenders:0,revenue:0,msgs3:7,geo:[{c: "US", n: 609, s: 52.5}, {c: "GB", n: 321, s: 27.6}, {c: "CA", n: 215, s: 18.5}, {c: "NL", n: 3, s: 0.3}, {c: "Other", n: 6, s: 0.5}],devs:[{d: "Mobile", n: 1466, s: 100, cl: "#1570ef"}],daily:[{d:"2026-06-05",c:38,s:4,sp:0,r:0},{d:"2026-06-06",c:156,s:13,sp:0,r:0},{d:"2026-06-07",c:397,s:30,sp:0,r:0},{d:"2026-06-08",c:246,s:24,sp:0,r:0},{d:"2026-06-09",c:114,s:8,sp:0,r:0},{d:"2026-06-10",c:6,s:0,sp:0,r:0},{d:"2026-06-11",c:122,s:5,sp:0,r:0},{d:"2026-06-12",c:276,s:23,sp:0,r:0},{d:"2026-06-13",c:226,s:15,sp:0,r:0},{d:"2026-06-14",c:403,s:24,sp:0,r:0},{d:"2026-06-15",c:155,s:6,sp:0,r:0},{d:"2026-06-16",c:64,s:7,sp:0,r:0},{d:"2026-06-17",c:154,s:17,sp:0,r:0},{d:"2026-06-18",c:122,s:8,sp:0,r:0},{d:"2026-06-19",c:47,s:7,sp:0,r:0},{d:"2026-06-20",c:58,s:17,sp:0,r:0}]},
+    {id:'01KTBS3785SXY0E748E84XFQP7',startDate:'2026-06-05',model:'Jennifer White',color:'#f97316',clicks:3236,subs:277,spenders:5,revenue:164.84,msgs3:11,geo:[{c: "US", n: 52, s: 38.2}, {c: "GB", n: 42, s: 30.9}, {c: "CA", n: 28, s: 20.6}, {c: "AU", n: 12, s: 8.8}, {c: "Other", n: 6, s: 1.5}],devs:[{d: "Mobile", n: 1800, s: 80.2, cl: "#1570ef"}, {d: "Bot", n: 400, s: 17.8, cl: "#f04438"}, {d: "Desktop", n: 44, s: 2.0, cl: "#10b981"}],daily:[{d:"2026-06-05",c:80,s:7,sp:0,r:0},{d:"2026-06-06",c:306,s:27,sp:0,r:0},{d:"2026-06-07",c:435,s:15,sp:1,r:15.99},{d:"2026-06-08",c:251,s:13,sp:1,r:15.99},{d:"2026-06-09",c:152,s:11,sp:0,r:0},{d:"2026-06-10",c:50,s:4,sp:0,r:0},{d:"2026-06-11",c:37,s:3,sp:0,r:0},{d:"2026-06-12",c:250,s:21,sp:1,r:27.55},{d:"2026-06-13",c:772,s:59,sp:1,r:23.99},{d:"2026-06-14",c:244,s:25,sp:1,r:26.66},{d:"2026-06-15",c:149,s:14,sp:0,r:0},{d:"2026-06-16",c:135,s:28,sp:1,r:26.66},{d:"2026-06-17",c:282,s:34,sp:1,r:23.99},{d:"2026-06-18",c:119,s:13,sp:0,r:0},{d:"2026-06-19",c:43,s:3,sp:1,r:20.00},{d:"2026-06-20",c:64,s:15,sp:1,r:7.99}]},
+    {id:'01KTBQYWGAVZ1EAP0ABZE9V784',startDate:'2026-06-05',model:'Amanda Essen',color:'#10b981',clicks:2970,subs:417,spenders:1,revenue:88.79,msgs3:14,geo:[{c: "US", n: 88, s: 50.3}, {c: "GB", n: 42, s: 24.0}, {c: "CA", n: 28, s: 16.0}, {c: "AU", n: 12, s: 6.9}, {c: "Other", n: 5, s: 2.9}],devs:[{d: "Mobile", n: 148, s: 79.6, cl: "#1570ef"}, {d: "Bot", n: 32, s: 17.2, cl: "#f04438"}, {d: "Desktop", n: 6, s: 3.2, cl: "#10b981"}],daily:[{d:"2026-06-05",c:19,s:1,sp:0,r:0},{d:"2026-06-06",c:200,s:16,sp:0,r:0},{d:"2026-06-07",c:504,s:49,sp:0,r:0},{d:"2026-06-08",c:203,s:36,sp:0,r:0},{d:"2026-06-09",c:54,s:1,sp:0,r:0},{d:"2026-06-10",c:532,s:84,sp:0,r:0},{d:"2026-06-11",c:119,s:20,sp:0,r:0},{d:"2026-06-12",c:112,s:8,sp:0,r:0},{d:"2026-06-13",c:517,s:78,sp:0,r:0},{d:"2026-06-14",c:304,s:54,sp:0,r:0},{d:"2026-06-15",c:368,s:57,sp:0,r:0},{d:"2026-06-16",c:50,s:6,sp:0,r:0},{d:"2026-06-17",c:67,s:8,sp:1,r:88.79},{d:"2026-06-21",c:4,s:0,sp:0,r:0}]},
+    {id:'01KTBQV7R1AAMDWY0NEQ7VC9CM',startDate:'2026-06-05',model:'Ellie Bird',color:'#8b5cf6',clicks:4165,subs:268,spenders:0,revenue:0,msgs3:15,geo:[{c: "US", n: 88, s: 50.3}, {c: "GB", n: 42, s: 24.0}, {c: "CA", n: 28, s: 16.0}, {c: "AU", n: 12, s: 6.9}, {c: "Other", n: 5, s: 2.9}],devs:[{d: "Mobile", n: 136, s: 77.7, cl: "#1570ef"}, {d: "Bot", n: 35, s: 20.0, cl: "#f04438"}, {d: "Desktop", n: 4, s: 2.3, cl: "#10b981"}],daily:[{d:"2026-06-05",c:15,s:0,sp:0,r:0},{d:"2026-06-06",c:138,s:14,sp:0,r:0},{d:"2026-06-07",c:894,s:73,sp:0,r:0},{d:"2026-06-08",c:433,s:17,sp:0,r:0},{d:"2026-06-09",c:432,s:30,sp:0,r:0},{d:"2026-06-10",c:451,s:26,sp:0,r:0},{d:"2026-06-11",c:475,s:25,sp:0,r:0},{d:"2026-06-12",c:406,s:26,sp:0,r:0},{d:"2026-06-13",c:724,s:40,sp:0,r:0},{d:"2026-06-14",c:382,s:16,sp:0,r:0},{d:"2026-06-15",c:6,s:0,sp:0,r:0},{d:"2026-06-16",c:2,s:0,sp:0,r:0},{d:"2026-06-17",c:1,s:0,sp:0,r:0},{d:"2026-06-18",c:9,s:1,sp:0,r:0},{d:"2026-06-21",c:1,s:0,sp:0,r:0}]},
+    {id:'01KT47TPJJBK10C1WKH36H91X6',startDate:'2026-06-03',model:'Nancy Ace',color:'#f59e0b',clicks:3897,subs:308,spenders:0,revenue:0,msgs3:8,geo:[{c: "US", n: 30, s: 41.7}, {c: "GB", n: 18, s: 25.0}, {c: "CA", n: 14, s: 19.4}, {c: "AU", n: 6, s: 8.3}, {c: "Other", n: 4, s: 5.6}],devs:[{d: "Mobile", n: 57, s: 79.2, cl: "#1570ef"}, {d: "Bot", n: 13, s: 18.1, cl: "#f04438"}, {d: "Desktop", n: 2, s: 2.8, cl: "#10b981"}],daily:[{d:"2026-06-03",c:1,s:0,sp:0,r:0},{d:"2026-06-05",c:34,s:0,sp:0,r:0},{d:"2026-06-06",c:309,s:17,sp:0,r:0},{d:"2026-06-07",c:400,s:27,sp:0,r:0},{d:"2026-06-08",c:270,s:14,sp:0,r:0},{d:"2026-06-09",c:158,s:10,sp:0,r:0},{d:"2026-06-10",c:20,s:0,sp:0,r:0},{d:"2026-06-11",c:78,s:9,sp:0,r:0},{d:"2026-06-12",c:548,s:25,sp:0,r:0},{d:"2026-06-13",c:1148,s:138,sp:0,r:0},{d:"2026-06-14",c:393,s:28,sp:0,r:0},{d:"2026-06-15",c:344,s:20,sp:0,r:0},{d:"2026-06-16",c:224,s:12,sp:0,r:0},{d:"2026-06-17",c:8,s:0,sp:0,r:0},{d:"2026-06-18",c:103,s:3,sp:0,r:0},{d:"2026-06-19",c:193,s:5,sp:0,r:0},{d:"2026-06-20",c:238,s:9,sp:0,r:0},{d:"2026-06-21",c:7,s:0,sp:0,r:0}]}
   ]
 };
 var ALL = LINKS.TD.concat(LINKS.VL);
@@ -424,14 +411,13 @@ var FCLICKS=[
 
 var spend={}, statuses={}, names={td:'Traffic Devils',vl:'Vasyl Lev'};
 var fFilters={con:'all',model:'all',status:'all',device:'all'}, fPage=0, fFiltered=[], F_PER_PG=25;
-var chatFilters={con:'all',model:'all'};
-var CHAT_ENTRIES=[];
-try{var _c=localStorage.getItem('tm_chat');if(_c)CHAT_ENTRIES=JSON.parse(_c);}catch(e){}
+var anScope='all', anConCtx=null, anTarget=1.50;
+try{var _at=localStorage.getItem('tm_antarget');if(_at)anTarget=parseFloat(_at)||1.50;}catch(e){}
 ALL.forEach(function(l){spend[l.id]=0;statuses[l.id]='active';});
 
 function loadLS(){try{var s=localStorage.getItem('tm_spend');if(s)Object.assign(spend,JSON.parse(s));}catch(e){}try{var t=localStorage.getItem('tm_status');if(t)Object.assign(statuses,JSON.parse(t));}catch(e){}try{var n=localStorage.getItem('tm_names');if(n)Object.assign(names,JSON.parse(n));}catch(e){}}
 function saveLS(){try{localStorage.setItem('tm_spend',JSON.stringify(spend));}catch(e){}try{localStorage.setItem('tm_status',JSON.stringify(statuses));}catch(e){}try{localStorage.setItem('tm_names',JSON.stringify(names));}catch(e){}}
-function saveChatLS(){try{localStorage.setItem('tm_chat',JSON.stringify(CHAT_ENTRIES));}catch(e){}}
+function saveAnTarget(){anTarget=parseFloat(document.getElementById('anTarget').value)||1.50;try{localStorage.setItem('tm_antarget',anTarget);}catch(e){}}
 function saveName(k){var el=document.getElementById('name-'+k);if(!el)return;var v=el.innerText.trim();if(v)names[k]=v;else el.innerText=names[k];saveLS();updateRefs();}
 
 var GEO_COLORS=['#1570ef','#10b981','#f59e0b','#ec4899','#8b5cf6','#f97316','#0ea5e9','#14b8a6'];
@@ -475,11 +461,30 @@ function renderKPI(){
   document.getElementById('an-ms').textContent=tM;
 }
 
+function dailyRowsHtml(daily){
+  if(!daily||!daily.length)return '<tr><td colspan="6" style="text-align:center;color:var(--t3);">No daily data yet</td></tr>';
+  return daily.map(function(dy){
+    var dcr=dy.c>0?(dy.s/dy.c*100):0;
+    return '<tr><td>'+dy.d+'</td><td>'+num(dy.c)+'</td><td>'+num(dy.s)+'</td><td>'+dy.sp+'</td>'+
+      '<td style="'+(dy.r>0?'color:var(--gr);font-weight:600':'')+'">'+dcr.toFixed(2)+'%</td>'+
+      '<td>'+(dy.r>0?'<span class="badge b-g">'+fmt(dy.r)+'</span>':'<span class="na">$0.00</span>')+'</td></tr>';
+  }).join('');
+}
+function toggleDaily(id){
+  var det=document.getElementById('det-'+id),chev=document.getElementById('chev-'+id);
+  if(!det)return;
+  var open=det.style.display==='table-row';
+  det.style.display=open?'none':'table-row';
+  if(chev)chev.style.transform=open?'rotate(0deg)':'rotate(90deg)';
+}
 function renderTable(links,bodyId){
   var maxS=Math.max.apply(null,links.map(function(l){return l.subs;}).concat([1]));
   var rows=links.map(function(l){
     var d=calc(l),bw=Math.round(l.subs/maxS*52),ep=l.subs>0?Math.round(l.msgs3/l.subs*100):0;
-    return '<tr><td class="tdl"><div class="mn"><div class="dot" style="background:'+l.color+'"></div>'+l.model+'</div></td>'+
+    var daily=l.daily||[];
+    var mainRow='<tr><td class="tdl"><div class="mn mn-click" onclick="toggleDaily(\''+l.id+'\')">'+
+        '<svg class="chev" id="chev-'+l.id+'" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="3"><path d="M9 6l6 6-6 6"/></svg>'+
+        '<div class="dot" style="background:'+l.color+'"></div>'+l.model+'</div></td>'+
       '<td class="tdl">'+stHtml(l.id)+'</td>'+
       '<td>'+num(l.clicks)+'</td>'+
       '<td><div class="bar-w">'+num(l.subs)+'<div class="bar-bg"><div class="bar-f" style="width:'+bw+'px;background:'+l.color+'"></div></div></div></td>'+
@@ -490,6 +495,13 @@ function renderTable(links,bodyId){
       '<td>'+(d.sp>0?fmt(d.sp):'<span class="na">—</span>')+'</td>'+
       '<td>'+dash(d.cpc,fmt)+'</td><td>'+dash(d.cpf,fmt)+'</td>'+
       '<td>'+(d.roas!=null?'<span class="badge b-b">'+d.roas.toFixed(2)+'x</span>':'<span class="na">—</span>')+'</td></tr>';
+    var detailRow='<tr class="tr-detail" id="det-'+l.id+'" style="display:none;"><td colspan="12" style="padding:0;">'+
+        '<div class="det-wrap">'+
+          '<div class="det-note">&#x1F4C5; '+daily.length+' active day(s) &middot; Spend / CPC / CPF / ROAS are aggregate-only — Meta budget is entered manually, not per day</div>'+
+          '<div class="det-scroll"><table class="det-tbl"><thead><tr><th>Date</th><th>Clicks</th><th>Subs</th><th>Spenders</th><th>CR%</th><th>Revenue</th></tr></thead>'+
+          '<tbody>'+dailyRowsHtml(daily)+'</tbody></table></div>'+
+        '</div></td></tr>';
+    return mainRow+detailRow;
   }).join('');
   var tC=links.reduce(function(a,l){return a+l.clicks;},0),tS=links.reduce(function(a,l){return a+l.subs;},0);
   var tSp=links.reduce(function(a,l){return a+(spend[l.id]||0);},0),tR=links.reduce(function(a,l){return a+l.revenue;},0);
@@ -549,58 +561,10 @@ function openPanel(id){
 function closePanel(){document.getElementById('pov').classList.remove('open');Object.values(pCharts).forEach(function(c){try{c.destroy();}catch(e){}});pCharts={};}
 document.addEventListener('keydown',function(e){if(e.key==='Escape')closePanel();});
 
-var ci={},chartsReady=false;
-function renderCharts(){
-  if(chartsReady)Object.values(ci).forEach(function(c){try{c.destroy();}catch(e){}});
-  ci={};chartsReady=true;
-  function mkBar(cid,labels,data,colors){return new Chart(document.getElementById(cid),{type:'bar',data:{labels:labels,datasets:[{data:data,backgroundColor:colors,borderRadius:5,borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#98a2b3',font:{size:10}},grid:{display:false}},y:{ticks:{color:'#98a2b3',font:{size:10}},grid:{color:'rgba(0,0,0,.05)'}}}}});}
-  ci.cr_td=mkBar('cCR_td',LINKS.TD.map(function(l){return l.model.split(' ')[0];}),LINKS.TD.map(function(l){return+(l.subs/l.clicks*100).toFixed(2);}),LINKS.TD.map(function(l){return l.color;}));
-  ci.cr_vl=mkBar('cCR_vl',LINKS.VL.map(function(l){return l.model.split(' ')[0];}),LINKS.VL.map(function(l){return+(l.subs/l.clicks*100).toFixed(2);}),LINKS.VL.map(function(l){return l.color;}));
-  ci.s_td=mkBar('cSubs_td',LINKS.TD.map(function(l){return l.model.split(' ')[0];}),LINKS.TD.map(function(l){return l.subs;}),LINKS.TD.map(function(l){return l.color;}));
-  ci.s_vl=mkBar('cSubs_vl',LINKS.VL.map(function(l){return l.model.split(' ')[0];}),LINKS.VL.map(function(l){return l.subs;}),LINKS.VL.map(function(l){return l.color;}));
-  function mkMsgs(links,cid){var maxM=Math.max.apply(null,links.map(function(l){return l.msgs3;}).concat([1]));document.getElementById(cid).innerHTML=links.map(function(l){var w=Math.round(l.msgs3/maxM*100),ep=l.subs>0?Math.round(l.msgs3/l.subs*100):0;return '<div class="bar-item"><div class="bar-label"><span style="display:flex;align-items:center;gap:5px;font-size:12px;"><div class="dot" style="background:'+l.color+'"></div>'+l.model+'</span><span style="font-size:12px;font-weight:600;color:#6941c6">'+l.msgs3+' <span style="color:var(--t3);font-weight:400">('+ep+'% subs)</span></span></div><div class="bar-track"><div class="bar-fill" style="width:'+w+'%;background:linear-gradient(90deg,#6941c6,#9e77ed)"></div></div></div>';}).join('');}
-  mkMsgs(LINKS.TD,'msgs_td_chart');mkMsgs(LINKS.VL,'msgs_vl_chart');
-  renderActual();
-}
-
-var _ad={};
-try{_ad=JSON.parse(localStorage.getItem('tm_act')||'{}');}catch(e){}
-function _saveAd(){try{localStorage.setItem('tm_act',JSON.stringify(_ad));}catch(e){}}
-function renderActual(){renderActBlock(LINKS.TD,names.td,'act_td');renderActBlock(LINKS.VL,names.vl,'act_vl');}
-function renderActBlock(links,conName,cid){
+function renderMsgsBarInto(links,cid){
   var el=document.getElementById(cid);if(!el)return;
-  var html='<div style="display:flex;align-items:center;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--bl);">'
-    +'<span style="flex:1;font-size:12px;font-weight:600;color:var(--t2);">'+conName+'</span>'
-    +'<span style="font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--t3);width:128px;text-align:center;">Start Date</span>'
-    +'<span style="font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--t3);width:128px;text-align:center;margin-left:8px;">Stop Date</span>'
-    +'<span style="width:78px;"></span>'
-    +'</div>';
-  links.forEach(function(l){
-    var s=_ad[l.id+'_s']||l.startDate;
-    var e=_ad[l.id+'_e']||'';
-    var days=Math.floor((new Date(e||Date.now())-new Date(s))/864e5);
-    html+='<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--bl);">'
-      +'<div class="dot" style="background:'+l.color+'"></div>'
-      +'<span style="font-size:13px;font-weight:500;flex:1;">'+l.model+'</span>'
-      +'<input type="date" value="'+s+'" title="Start date (API first click: '+l.startDate+')"'
-      +' style="font-size:11px;border:1px solid var(--border);border-radius:6px;padding:3px 6px;outline:none;width:120px;color:var(--t1);background:var(--white);"'
-      +' data-lid="'+l.id+'" data-f="s" data-cid="'+cid+'" onchange="actChange(this)">'
-      +'<input type="date" value="'+e+'" title="Stop date"'
-      +' style="font-size:11px;border:1px solid '+(e?'var(--rd)':'var(--border)')+';border-radius:6px;padding:3px 6px;outline:none;width:120px;color:'+(e?'var(--rd)':'var(--t3)')+';background:var(--white);"'
-      +' data-lid="'+l.id+'" data-f="e" data-cid="'+cid+'" onchange="actChange(this)">'
-      +'<span style="font-size:10px;color:var(--t3);min-width:70px;text-align:right;">'+days+' days</span>'
-      +'</div>';
-  });
-  el.innerHTML=html;
-}
-function actChange(inp){
-  _ad[inp.getAttribute('data-lid')+'_'+inp.getAttribute('data-f')]=inp.value;
-  _saveAd();
-  renderActBlock(
-    inp.getAttribute('data-cid')==='act_td'?LINKS.TD:LINKS.VL,
-    inp.getAttribute('data-cid')==='act_td'?names.td:names.vl,
-    inp.getAttribute('data-cid')
-  );
+  var maxM=Math.max.apply(null,links.map(function(l){return l.msgs3;}).concat([1]));
+  el.innerHTML=links.map(function(l){var w=Math.round(l.msgs3/maxM*100),ep=l.subs>0?Math.round(l.msgs3/l.subs*100):0;return '<div class="bar-item"><div class="bar-label"><span style="display:flex;align-items:center;gap:5px;font-size:12px;"><div class="dot" style="background:'+l.color+'"></div>'+l.model+'</span><span style="font-size:12px;font-weight:600;color:#6941c6">'+l.msgs3+' <span style="color:var(--t3);font-weight:400">('+ep+'% subs)</span></span></div><div class="bar-track"><div class="bar-fill" style="width:'+w+'%;background:linear-gradient(90deg,#6941c6,#9e77ed)"></div></div></div>';}).join('');
 }
 
 function renderFraud(){
@@ -631,32 +595,153 @@ function renderFraudTable(){
   document.getElementById('fraudTbody').innerHTML=page.map(function(r){var fs=FSTATS.filter(function(s){return s.model===r.model&&s.con===r.con;})[0];var col=fs?fs.color:'#98a2b3';var di=r.device==='Mobile'?'\ud83d\udcf1':r.device==='Desktop'?'\ud83d\udcbb':'\ud83e\udd16';return '<tr class="'+(r.bot?'is-bot':'')+'"><td class="fr-time">'+r.t+'</td><td>'+(cb[r.con]||r.con)+'</td><td><span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:8px;background:'+col+'22;color:'+col+'">'+r.model+'</span></td><td class="fr-ip" title="'+r.ip+'">'+r.ip+'</td><td class="fr-ua" title="'+r.ua+'">'+r.ua+'</td><td style="font-size:11px;color:var(--t3);font-family:monospace;">'+r.id.slice(0,18)+'\u2026</td><td>'+(FLAG[r.country]||'\ud83c\udf0d')+' '+r.country+'</td><td>'+di+' '+r.device+'</td><td style="text-align:center;">'+r.gross+'</td><td>'+(r.bot?'<span class="fr-bot">Bot</span>':'<span class="fr-ok">Ok</span>')+'</td></tr>';}).join('');}
 function fraudChangePage(dir){var maxP=Math.ceil(fFiltered.length/F_PER_PG)-1;fPage=Math.max(0,Math.min(maxP,fPage+dir));renderFraudTable();}
 
-var MODEL_MAP={'octokura':{con:'TD',model:'Octokura'},'nancy ace':{con:'',model:'Nancy Ace'},'ellie bird':{con:'',model:'Ellie Bird'},'emiri momota':{con:'TD',model:'Emiri Momota'},'emiri':{con:'TD',model:'Emiri Momota'},'chloe temple':{con:'VL',model:'Chloe Temple'},'chloe':{con:'VL',model:'Chloe Temple'},'jennifer white':{con:'VL',model:'Jennifer White'},'jennifer':{con:'VL',model:'Jennifer White'},'amanda essen':{con:'VL',model:'Amanda Essen'},'amanda':{con:'VL',model:'Amanda Essen'}};
-var CON_MAP={'td':'TD','traffic devils':'TD','traff_meta_v.lev':'VL','traff_meta_v.lev_om':'VL','vasyl lev':'VL','vl':'VL','vasyl':'VL'};
-function tagFan(text){var t=text.toLowerCase();if(t.includes('purchas')||t.includes('bought')||t.includes('paid'))return{tag:'hot',lbl:'\ud83d\udcb0 Purchased'};if(t.includes('ppv')||t.includes('left after')||t.includes('disappear')||t.includes('ghost'))return{tag:'ppv',lbl:'\ud83d\udce6 Dropped after PPV'};if(t.includes('no money')||t.includes('broke'))return{tag:'lost',lbl:'\u274c No Money'};if(t.includes('onlyfans.com/')||t.includes('same fan'))return{tag:'cross',lbl:'\ud83d\udd04 Cross-fan'};if(t.includes('old fan')||t.includes('2 years')||t.includes('11 months'))return{tag:'warm',lbl:'\u267b\ufe0f Old fan'};if(t.includes('blocked'))return{tag:'lost',lbl:'\ud83d\udeab Blocked'};return{tag:'cold',lbl:'\u2744\ufe0f Single message'};}
-function splitBlocks(raw){var lines=raw.split('\n'),blocks=[],cur=[];for(var i=0;i<lines.length;i++){var l=lines[i].trim();if(/^\u2014{2,}$/.test(l)||/^-{4,}$/.test(l)){if(cur.length){blocks.push(cur);cur=[];}continue;}var hasModel=false;for(var k in MODEL_MAP){if(l.toLowerCase().includes(k)&&/\d{1,2}[.\/]\d{1,2}/.test(l)){hasModel=true;break;}}if(hasModel&&cur.length){blocks.push(cur);cur=[];}cur.push(lines[i]);}if(cur.length)blocks.push(cur);return blocks;}
-function parseBlock(lines,defaultDate){var model=null,con=null,date=defaultDate;for(var i=0;i<Math.min(6,lines.length);i++){var l=lines[i].trim();var dm=l.match(/(\d{1,2})[.\/](\d{1,2})(?:[.\/](\d{2,4}))?/);if(dm){var day=dm[1].padStart(2,'0'),mon=dm[2].padStart(2,'0'),yr=dm[3]?(dm[3].length===2?'20'+dm[3]:dm[3]):new Date().getFullYear();date=yr+'-'+mon+'-'+day;}var ll=l.toLowerCase();for(var ck in CON_MAP){if(ll.includes(ck)){con=CON_MAP[ck];break;}}var mkeys=Object.keys(MODEL_MAP).sort(function(a,b){return b.length-a.length;});for(var j=0;j<mkeys.length;j++){if(ll.includes(mkeys[j])){model=MODEL_MAP[mkeys[j]].model;if(!con&&MODEL_MAP[mkeys[j]].con)con=MODEL_MAP[mkeys[j]].con;break;}}}
-if(!model)return null;var fullText=lines.join('\n');var subs=0,replies=0,revenue=0,fans=[];var sm=fullText.match(/(\d+)\s*subscrib/i);if(sm)subs=parseInt(sm[1]);var rm=fullText.match(/(\d+)\s*repl/i);if(rm)replies=parseInt(rm[1]);var rvm=fullText.match(/revenue\s*([$]?([\d.]+))/i);if(rvm&&rvm[2])revenue=parseFloat(rvm[2]);
-for(var i2=0;i2<lines.length;i2++){var l2=lines[i2].trim();if(!l2||l2.length<5)continue;if(/^[123][).]/.test(l2))continue;var isH=false;for(var k2 in MODEL_MAP){if(l2.toLowerCase().includes(k2)){isH=true;break;}}if(isH)continue;var nl=/^(\d+)\s+(.+)/.exec(l2);if(nl){var cnt=parseInt(nl[1]);for(var kk=0;kk<cnt;kk++)fans.push({text:nl[2],tag:tagFan(nl[2])});}else if(l2.startsWith('-')||l2.startsWith('\u2022')){fans.push({text:l2.slice(1).trim(),tag:tagFan(l2)});}}
-if(!con){var bt=fullText.toLowerCase();if(bt.includes('vasyl')||bt.includes(' vl'))con='VL';else con='TD';}
-return{id:Date.now()+Math.random(),con:con,model:model,date:date,subs:subs,replies:replies,revenue:revenue,raw:lines.join('\n'),fans:fans,replyRate:subs>0?+(replies/subs*100).toFixed(1):0};}
-function parseBulkChat(){var raw=document.getElementById('chatRawInput').value.trim();if(!raw){alert('Paste the chatter report first');return;}var date=document.getElementById('chatDateInput').value||new Date().toISOString().slice(0,10);var blocks=splitBlocks(raw);var added=0;blocks.forEach(function(b){var e=parseBlock(b,date);if(e){CHAT_ENTRIES.unshift(e);added++;}});if(added===0){alert('Could not detect any models. Make sure model names are present (Nancy Ace, Jennifer White, etc).');return;}saveChatLS();document.getElementById('chatRawInput').value='';renderChat();toast('Added '+added+' report(s)');}
-function setChatFilter(btn){var cf=btn.getAttribute('data-cf'),cv=btn.getAttribute('data-cv');chatFilters[cf]=cv;document.querySelectorAll('[data-cf="'+cf+'"]').forEach(function(b){b.classList.remove('active');});btn.classList.add('active');renderChat();}
-function deleteChatEntry(id){CHAT_ENTRIES=CHAT_ENTRIES.filter(function(e){return e.id!==id;});saveChatLS();renderChat();}
-function renderChat(){
-  var filtered=CHAT_ENTRIES.filter(function(e){if(chatFilters.con!=='all'&&e.con!==chatFilters.con)return false;if(chatFilters.model!=='all'&&e.model!==chatFilters.model)return false;return true;});
-  var tS=filtered.reduce(function(a,e){return a+e.subs;},0),tR=filtered.reduce(function(a,e){return a+e.replies;},0),tRev=filtered.reduce(function(a,e){return a+e.revenue;},0),avgRR=filtered.length>0?(filtered.reduce(function(a,e){return a+e.replyRate;},0)/filtered.length):0;
-  var ppvCnt=0,hotCnt=0,coldCnt=0,crossCnt=0;filtered.forEach(function(e){e.fans.forEach(function(f){if(f.tag.tag==='ppv')ppvCnt++;if(f.tag.tag==='hot')hotCnt++;if(f.tag.tag==='cold')coldCnt++;if(f.tag.tag==='cross')crossCnt++;});});
-  document.getElementById('chatSummaryKPIs').innerHTML='<div class="kpi"><div class="kpi-l">Subscriptions</div><div class="kpi-v">'+tS+'</div><div class="kpi-s">'+filtered.length+' reports</div></div><div class="kpi"><div class="kpi-l">Replies</div><div class="kpi-v">'+tR+'</div><div class="kpi-s">reply rate '+avgRR.toFixed(1)+'%</div></div><div class="kpi"><div class="kpi-l">Revenue</div><div class="kpi-v" style="color:'+(tRev>0?'var(--gr)':'var(--rd)')+'">$'+tRev.toFixed(2)+'</div><div class="kpi-s">total</div></div><div class="kpi"><div class="kpi-l">Dropped after PPV</div><div class="kpi-v" style="color:#7c3aed">'+ppvCnt+'</div><div class="kpi-s">fans</div></div><div class="kpi"><div class="kpi-l">Purchased</div><div class="kpi-v" style="color:var(--gr)">'+hotCnt+'</div><div class="kpi-s">spenders</div></div><div class="kpi"><div class="kpi-l">Cold</div><div class="kpi-v" style="color:var(--t3)">'+coldCnt+'</div><div class="kpi-s">single message</div></div>';
-  var ins=[];if(filtered.length>0){if(avgRR<10)ins.push({cls:'bad',txt:'\u26a0\ufe0f Reply rate below 10%.'});if(ppvCnt>hotCnt*2&&ppvCnt>0)ins.push({cls:'warn',txt:'\ud83d\udce6 Many drop-offs after PPV ('+ppvCnt+').'});if(tRev===0&&tR>5)ins.push({cls:'bad',txt:'\ud83d\udcb8 '+tR+' replies but $0 revenue.'});if(hotCnt>0)ins.push({cls:'good',txt:'\u2705 '+hotCnt+' fan(s) purchased! Scale the script that worked.'});if(crossCnt>0)ins.push({cls:'warn',txt:'\ud83d\udd04 Detected '+crossCnt+' cross-model fans.'});}
-  document.getElementById('chatInsights').innerHTML=ins.map(function(i){return '<div class="insight-box '+i.cls+'">'+i.txt+'</div>';}).join('');
-  if(filtered.length===0){document.getElementById('chatEntries').innerHTML='<div style="text-align:center;padding:30px;color:var(--t3);font-size:13px;">No reports for this filter</div>';return;}
-  var mc={'Octokura':'#0ea5e9','Nancy Ace':'#f59e0b','Ellie Bird':'#8b5cf6','Emiri Momota':'#14b8a6','Chloe Temple':'#ec4899','Jennifer White':'#f97316','Amanda Essen':'#10b981'};
-  var conB={TD:'cbd-td',VL:'cbd-vl'};var tc={hot:'tag-hot',warm:'tag-warm',cold:'tag-cold',lost:'tag-lost',ppv:'tag-ppv',cross:'tag-cross'};
-  document.getElementById('chatEntries').innerHTML=filtered.map(function(e){
-    var rr=e.subs>0?(e.replies/e.subs*100).toFixed(1):0,rrCol=rr>=10?'var(--gr)':rr>=5?'var(--am)':'var(--rd)',col=mc[e.model]||'#98a2b3';
-    var fh=e.fans.map(function(f){return '<div class="ce-fan-row"><span class="ce-fan-tag '+(tc[f.tag.tag]||'tag-cold')+'">'+f.tag.lbl+'</span><span>'+f.text+'</span></div>';}).join('');
-    return '<div class="chat-entry"><div class="ce-hdr"><span class="cbadge '+(conB[e.con]||'')+'">'+e.con+'</span><div class="dot" style="background:'+col+'"></div><span class="ce-title">'+e.model+'</span><span class="ce-date">'+e.date+'</span><button onclick="deleteChatEntry('+e.id+')" style="font-size:11px;color:var(--t3);border:none;background:transparent;cursor:pointer;margin-left:8px;">\u2715</button></div><div class="ce-body"><div class="ce-kpi"><div class="ce-kpi-v">'+e.subs+'</div><div class="ce-kpi-l">Subs</div></div><div class="ce-kpi"><div class="ce-kpi-v" style="color:'+rrCol+'">'+rr+'%</div><div class="ce-kpi-l">Reply Rate</div></div><div class="ce-kpi"><div class="ce-kpi-v" style="color:'+(e.revenue>0?'var(--gr)':'var(--rd)')+'">$'+e.revenue.toFixed(2)+'</div><div class="ce-kpi-l">Revenue</div></div></div>'+(fh?'<div class="ce-fans">'+fh+'</div>':'')+'</div>';}).join('');
+// ── ANALYSIS ────────────────────────────────────────────────────────────────
+function setAnalysisCon(con,btn){
+  anConCtx=con==='all'?null:con; anScope=con;
+  document.querySelectorAll('[data-congroup]').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  renderAnalysis();
+}
+function setAnalysisModel(id,btn){
+  anScope=id;
+  document.querySelectorAll('[data-modelgroup]').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  renderAnalysis();
+}
+function renderAnalysisModelBtns(){
+  var c=document.getElementById('analysisModelBtns'),lbl=document.getElementById('anModelLabel');
+  if(!c||!lbl)return;
+  if(!anConCtx){c.innerHTML='';lbl.textContent='';return;}
+  var links=anConCtx==='TD'?LINKS.TD:LINKS.VL;
+  lbl.textContent='Model:';
+  c.innerHTML=links.map(function(l){return '<button class="scope-btn'+(anScope===l.id?' active':'')+'" data-modelgroup data-scope="'+l.id+'" onclick="setAnalysisModel(\''+l.id+'\',this)">'+l.model+'</button>';}).join('');
+}
+function anScopedLinks(){if(anScope==='all')return ALL;if(anScope==='TD')return LINKS.TD;if(anScope==='VL')return LINKS.VL;return ALL.filter(function(l){return l.id===anScope;});}
+function anDateRange(){var f=(document.getElementById('anFrom')||{}).value,t=(document.getElementById('anTo')||{}).value;return{from:f||null,to:t||null};}
+function anModelStats(l,range){
+  var d=l.daily||[],clicks,subs,spenders,revenue;
+  if(!range.from&&!range.to){clicks=l.clicks;subs=l.subs;spenders=l.spenders;revenue=l.revenue;}
+  else{var inR=d.filter(function(x){return(!range.from||x.d>=range.from)&&(!range.to||x.d<=range.to);});clicks=inR.reduce(function(a,x){return a+x.c;},0);subs=inR.reduce(function(a,x){return a+x.s;},0);spenders=inR.reduce(function(a,x){return a+x.sp;},0);revenue=inR.reduce(function(a,x){return a+x.r;},0);}
+  var sp=spend[l.id]||0,cpf=subs>0&&sp>0?sp/subs:null,spm=clicks>0?subs/clicks*1000:0,cvr=clicks>0?subs/clicks*100:0;
+  var lastActive=d.length?d[d.length-1].d:l.startDate;
+  return{link:l,clicks:clicks,subs:subs,spenders:spenders,revenue:revenue,spend:sp,cpf:cpf,spm:spm,cvr:cvr,lastActive:lastActive};
+}
+var anCi={};
+function anIds(suf){return {sum:'anSum_'+suf,chSPM:'anChSPM_'+suf,chCPF:'anChCPF_'+suf,chFans:'anChFans_'+suf,chCVR:'anChCVR_'+suf,msgs:'anMsgs_'+suf,dfHead:'anDFH_'+suf,dfBody:'anDFB_'+suf,dcHead:'anDCH_'+suf,dcBody:'anDCB_'+suf};}
+function summaryRowsHtml(sorted){
+  return sorted.length?sorted.map(function(s){
+    var l=s.link;
+    return '<tr><td class="tdl"><div class="mn"><div class="dot" style="background:'+l.color+'"></div>'+l.model+'</div></td>'+
+      '<td>'+(s.spend>0?fmt(s.spend):'<span class="na">—</span>')+'</td>'+
+      '<td>'+num(s.clicks)+'</td>'+
+      '<td>'+num(s.subs)+'</td>'+
+      '<td>'+s.cvr.toFixed(2)+'%</td>'+
+      '<td>'+s.spm.toFixed(1)+'</td>'+
+      '<td style="font-weight:600;color:'+(s.cpf==null?'var(--t3)':s.cpf<=anTarget?'var(--gr)':s.cpf<=anTarget*1.3?'var(--am)':'var(--rd)')+'">'+(s.cpf!=null?fmt(s.cpf):'<span class="na">—</span>')+'</td>'+
+      '<td class="tdl">'+s.lastActive+'</td>'+
+      '<td>'+stHtml(l.id)+'</td></tr>';
+  }).join('') : '<tr><td colspan="9" style="text-align:center;color:var(--t3);padding:16px;">No models</td></tr>';
+}
+function contractorSectionHTML(con){
+  var conName=con==='TD'?names.td:names.vl, badge=con==='TD'?'cbd-td':'cbd-vl', ids=anIds(con);
+  return ''
+    +'<div style="display:flex;align-items:center;gap:8px;margin:18px 0 10px;">'
+      +'<span class="cbadge '+badge+'">'+con+'</span><span style="font-weight:700;font-size:15px;">'+conName+'</span>'
+    +'</div>'
+    +'<div class="card" style="margin-bottom:12px;">'
+      +'<div class="card-hdr"><div class="card-t">📋 Summary</div><div class="card-s">ranked by CPF</div></div>'
+      +'<div style="overflow-x:auto;"><table class="tbl"><thead><tr><th class="thl">Model</th><th>Spend</th><th>OF Clicks</th><th>OF Fans</th><th>CVR%</th><th>SPM</th><th>CPF</th><th class="thl">Last Active</th><th>Status</th></tr></thead><tbody id="'+ids.sum+'"></tbody></table></div>'
+    +'</div>'
+    +'<div class="chart-split" style="margin-bottom:12px;">'
+      +'<div class="card"><div class="card-hdr"><div class="card-t">SPM</div><div class="card-s">fans / 1,000 clicks</div></div><div style="padding:14px;"><div class="chart-wrap"><canvas id="'+ids.chSPM+'"></canvas></div></div></div>'
+      +'<div class="card"><div class="card-hdr"><div class="card-t">CPF ($)</div></div><div style="padding:14px;"><div class="chart-wrap"><canvas id="'+ids.chCPF+'"></canvas></div></div></div>'
+    +'</div>'
+    +'<div class="chart-split" style="margin-bottom:12px;">'
+      +'<div class="card"><div class="card-hdr"><div class="card-t">New fans</div></div><div style="padding:14px;"><div class="chart-wrap"><canvas id="'+ids.chFans+'"></canvas></div></div></div>'
+      +'<div class="card"><div class="card-hdr"><div class="card-t">CVR%</div></div><div style="padding:14px;"><div class="chart-wrap"><canvas id="'+ids.chCVR+'"></canvas></div></div></div>'
+    +'</div>'
+    +'<div class="card" style="margin-bottom:12px;"><div class="card-hdr"><div class="card-t">Fans 3+ msg</div><div class="card-s">engagement</div></div><div style="padding:16px;" id="'+ids.msgs+'"></div></div>'
+    +'<div class="chart-split" style="margin-bottom:8px;">'
+      +'<div class="card"><div class="card-hdr"><div class="card-t">📅 New fans by day</div></div><div class="daily-tbl-wrap"><table class="tbl"><thead><tr id="'+ids.dfHead+'"></tr></thead><tbody id="'+ids.dfBody+'"></tbody></table></div></div>'
+      +'<div class="card"><div class="card-hdr"><div class="card-t">📅 OF Clicks by day</div></div><div class="daily-tbl-wrap"><table class="tbl"><thead><tr id="'+ids.dcHead+'"></tr></thead><tbody id="'+ids.dcBody+'"></tbody></table></div></div>'
+    +'</div>';
+}
+function modelSectionHTML(linkId){
+  var l=ALL.filter(function(x){return x.id===linkId;})[0]; if(!l)return '';
+  var con=LINKS.TD.indexOf(l)>=0?'TD':'VL', conName=con==='TD'?names.td:names.vl, badge=con==='TD'?'cbd-td':'cbd-vl', ids=anIds(linkId);
+  return ''
+    +'<div style="display:flex;align-items:center;gap:8px;margin:18px 0 10px;">'
+      +'<div class="dot" style="background:'+l.color+'"></div><span style="font-weight:700;font-size:15px;">'+l.model+'</span><span class="cbadge '+badge+'">'+con+'</span>'
+    +'</div>'
+    +'<div class="chart-split" style="margin-bottom:8px;">'
+      +'<div class="card"><div class="card-hdr"><div class="card-t">📅 New fans by day</div></div><div class="daily-tbl-wrap"><table class="tbl"><thead><tr id="'+ids.dfHead+'"></tr></thead><tbody id="'+ids.dfBody+'"></tbody></table></div></div>'
+      +'<div class="card"><div class="card-hdr"><div class="card-t">📅 OF Clicks by day</div></div><div class="daily-tbl-wrap"><table class="tbl"><thead><tr id="'+ids.dcHead+'"></tr></thead><tbody id="'+ids.dcBody+'"></tbody></table></div></div>'
+    +'</div>';
+}
+function mkBarInto(cid,labels,data,colors){
+  var el=document.getElementById(cid);if(!el)return;
+  try{anCi[cid]=new Chart(el,{type:'bar',data:{labels:labels,datasets:[{data:data,backgroundColor:colors,borderRadius:5,borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#98a2b3',font:{size:10}},grid:{display:false}},y:{ticks:{color:'#98a2b3',font:{size:10}},grid:{color:'rgba(0,0,0,.05)'}}}}});}catch(e){console.warn('Chart.js unavailable',e);}
+}
+function fillDaily(links,range,headFans,bodyFans,headClicks,bodyClicks){
+  var dateSet={};
+  links.forEach(function(l){(l.daily||[]).forEach(function(d){if((!range.from||d.d>=range.from)&&(!range.to||d.d<=range.to))dateSet[d.d]=true;});});
+  var dates=Object.keys(dateSet).sort();
+  function build(headId,bodyId,field){
+    var headEl=document.getElementById(headId),bodyEl=document.getElementById(bodyId);if(!headEl||!bodyEl)return;
+    headEl.innerHTML='<th class="thl">Date</th>'+links.map(function(l){return '<th>'+l.model.split(' ')[0]+'</th>';}).join('')+'<th>TOTAL</th>';
+    bodyEl.innerHTML=dates.length?dates.map(function(dt){
+      var rowTotal=0;
+      var cells=links.map(function(l){var rec=(l.daily||[]).filter(function(x){return x.d===dt;})[0];var v=rec?rec[field]:0;rowTotal+=v;return '<td>'+(v>0?num(v):'<span class="na">—</span>')+'</td>';}).join('');
+      return '<tr><td class="tdl">'+dt+'</td>'+cells+'<td style="font-weight:700">'+num(rowTotal)+'</td></tr>';
+    }).join('') : ('<tr><td colspan="'+(links.length+2)+'" style="text-align:center;color:var(--t3);padding:16px;">No daily data for this period</td></tr>');
+  }
+  build(headFans,bodyFans,'s'); build(headClicks,bodyClicks,'c');
+}
+function fillContractorSection(con,range){
+  var links=con==='TD'?LINKS.TD:LINKS.VL, ids=anIds(con);
+  var stats=links.map(function(l){return anModelStats(l,range);});
+  var sorted=stats.slice().sort(function(a,b){var ac=a.cpf==null?Infinity:a.cpf,bc=b.cpf==null?Infinity:b.cpf;return ac-bc;});
+  document.getElementById(ids.sum).innerHTML=summaryRowsHtml(sorted);
+  var labels=sorted.map(function(s){return s.link.model.split(' ')[0];}),colors=sorted.map(function(s){return s.link.color;});
+  mkBarInto(ids.chSPM,labels,sorted.map(function(s){return+s.spm.toFixed(1);}),colors);
+  mkBarInto(ids.chCPF,labels,sorted.map(function(s){return s.cpf!=null?+s.cpf.toFixed(2):0;}),colors);
+  mkBarInto(ids.chFans,labels,sorted.map(function(s){return s.subs;}),colors);
+  mkBarInto(ids.chCVR,labels,sorted.map(function(s){return+s.cvr.toFixed(2);}),colors);
+  renderMsgsBarInto(links,ids.msgs);
+  fillDaily(links,range,ids.dfHead,ids.dfBody,ids.dcHead,ids.dcBody);
+}
+function fillModelSection(linkId,range){
+  var l=ALL.filter(function(x){return x.id===linkId;})[0]; if(!l)return;
+  var ids=anIds(linkId);
+  fillDaily([l],range,ids.dfHead,ids.dfBody,ids.dcHead,ids.dcBody);
+}
+function renderAnalysis(){
+  renderAnalysisModelBtns();
+  var links=anScopedLinks(),range=anDateRange();
+  var stats=links.map(function(l){return anModelStats(l,range);});
+  var totFans=stats.reduce(function(a,s){return a+s.subs;},0),totClicks=stats.reduce(function(a,s){return a+s.clicks;},0);
+  var totSpend=stats.reduce(function(a,s){return a+s.spend;},0);
+  var avgCPF=totFans>0&&totSpend>0?totSpend/totFans:null,avgSPM=totClicks>0?totFans/totClicks*1000:0;
+  var withCPF=stats.filter(function(s){return s.cpf!=null;});
+  var best=withCPF.length?withCPF.reduce(function(a,b){return b.cpf<a.cpf?b:a;}):null;
+  document.getElementById('anKPIs').innerHTML=
+    '<div class="kpi"><div class="kpi-l">New Fans</div><div class="kpi-v">'+num(totFans)+'</div><div class="kpi-s">'+stats.length+' model(s)</div></div>'+
+    '<div class="kpi"><div class="kpi-l">Avg CPF</div><div class="kpi-v" style="color:'+(avgCPF!=null?(avgCPF<=anTarget?'var(--gr)':avgCPF<=anTarget*1.3?'var(--am)':'var(--rd)'):'var(--t3)')+'">'+(avgCPF!=null?fmt(avgCPF):'—')+'</div><div class="kpi-s">target $'+anTarget.toFixed(2)+'</div></div>'+
+    '<div class="kpi"><div class="kpi-l">Best CPF</div><div class="kpi-v" style="color:var(--gr)">'+(best?fmt(best.cpf):'—')+'</div><div class="kpi-s">'+(best?best.link.model:'—')+'</div></div>'+
+    '<div class="kpi"><div class="kpi-l">Total Spend</div><div class="kpi-v">'+(totSpend>0?fmt(totSpend):'—')+'</div><div class="kpi-s">'+stats.length+' model(s)</div></div>'+
+    '<div class="kpi"><div class="kpi-l">OF Clicks</div><div class="kpi-v">'+num(totClicks)+'</div><div class="kpi-s">Smart Links</div></div>'+
+    '<div class="kpi"><div class="kpi-l">Avg SPM</div><div class="kpi-v">'+avgSPM.toFixed(1)+'</div><div class="kpi-s">fans / 1,000 clicks</div></div>';
+  var content=document.getElementById('anContent'); if(!content)return;
+  if(anScope==='all'){
+    content.innerHTML=contractorSectionHTML('TD')+contractorSectionHTML('VL');
+    fillContractorSection('TD',range); fillContractorSection('VL',range);
+  } else if(anScope==='TD'||anScope==='VL'){
+    content.innerHTML=contractorSectionHTML(anScope);
+    fillContractorSection(anScope,range);
+  } else {
+    content.innerHTML=modelSectionHTML(anScope);
+    fillModelSection(anScope,range);
+  }
 }
 
 function go(id,btn){
@@ -664,8 +749,8 @@ function go(id,btn){
   document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
   var el=document.getElementById('t-'+id);if(el)el.classList.add('active');
   btn.classList.add('active');
-  if(id==='charts')setTimeout(renderCharts,40);
   if(id==='fraud')setTimeout(renderFraud,10);
+  if(id==='analysis')setTimeout(renderAnalysis,40);
 }
 function updateRefs(){
   var e;
@@ -681,9 +766,9 @@ function renderAll(){renderKPI();renderTable(LINKS.TD,'tdBody');renderTable(LINK
 loadLS();
 document.getElementById('name-td').innerText=names.td;
 document.getElementById('name-vl').innerText=names.vl;
-document.getElementById('chatDateInput').value=new Date().toISOString().slice(0,10);
+document.getElementById('anTarget').value=anTarget.toFixed(2);
 buildThead('th-td');buildThead('th-vl');
-renderAll();renderChat();
+renderAll();renderAnalysis();
 
 </script>
 </body>
