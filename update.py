@@ -74,7 +74,7 @@ def api_get(url):
         return json.loads(r.read())
 
 now_utc = datetime.now(timezone.utc)
-date_str = now_utc.strftime("%B %-d, %Y")  # e.g. "June 19, 2026"
+date_str = now_utc.strftime("%B %-d, %Y, %H:%M UTC")  # e.g. "June 22, 2026, 14:32 UTC"
 
 print(f"[{now_utc.isoformat()}] Fetching 9 Smart Links...")
 
@@ -87,6 +87,12 @@ for lnk in SMART_LINKS:
         url = f"https://app.onlyfansapi.com/api/smart-links/{lnk['id']}/stats"
         data = api_get(url)
         s = data["data"]["summary"]
+        daily_raw = data["data"].get("daily_metrics", [])
+        daily = [
+            {"d": d["timestamp"], "c": d["clicks"], "s": d["subs"], "sp": d["spenders"], "r": d["revenue"]}
+            for d in daily_raw
+            if d["clicks"] or d["subs"] or d["revenue"]
+        ]
         entry = {
             "id": lnk["id"],
             "startDate": lnk["startDate"],
@@ -99,6 +105,7 @@ for lnk in SMART_LINKS:
             "msgs3": MSGS3.get(lnk["id"], 0),
             "geo": GEO.get(lnk["id"], []),
             "devs": DEVS.get(lnk["id"], []),
+            "daily": daily,
         }
         print(f"  OK {lnk['model']} ({lnk['con']}): {entry['clicks']} clicks / {entry['subs']} subs / ${entry['revenue']:.2f}")
         if lnk["con"] == "TD":
@@ -120,11 +127,12 @@ if not td_links and not vl_links:
 def link_to_js(l):
     geo = json.dumps(l["geo"]).replace('"c"', 'c').replace('"n"', 'n').replace('"s"', 's')
     devs = json.dumps(l["devs"]).replace('"d"', 'd').replace('"n"', 'n').replace('"s"', 's').replace('"cl"', 'cl')
+    daily = json.dumps(l["daily"]).replace('"d"', 'd').replace('"c"', 'c').replace('"s"', 's').replace('"sp"', 'sp').replace('"r"', 'r')
     return (
         f"    {{id:'{l['id']}',startDate:'{l['startDate']}',model:'{l['model']}',"
         f"color:'{l['color']}',clicks:{l['clicks']},subs:{l['subs']},"
         f"spenders:{l['spenders']},revenue:{l['revenue']},msgs3:{l['msgs3']},"
-        f"geo:{geo},devs:{devs}}}"
+        f"geo:{geo},devs:{devs},daily:{daily}}}"
     )
 
 links_js = "var LINKS = {\n  TD: [\n"
@@ -139,11 +147,8 @@ with open("index.html", encoding="utf-8") as f:
 
 html = re.sub(r'var LINKS = \{.*?\};\nvar ALL', links_js + '\nvar ALL', html, flags=re.DOTALL)
 
-# Update the visible date badge in the header (works for both EN and older UA format)
-html = re.sub(r'(June|May|July|April)\s+\d+,\s+2026\s*&middot;\s*4 TD \+ 5 VL',
-              date_str + ' &middot; 4 TD + 5 VL', html)
-html = re.sub(r'\d+\s+[а-яА-ЯіІ]+\s+2026\s*&middot;\s*4 TD \+ 5 VL',
-              date_str + ' &middot; 4 TD + 5 VL', html)
+# Update the visible date badge in the header — just the date, no contractor names
+html = re.sub(r'(<span class="upd">)[^<]*(</span>)', r'\g<1>' + date_str + r'\g<2>', html)
 
 with open("index.html", "w", encoding="utf-8") as f:
     f.write(html)
