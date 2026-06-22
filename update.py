@@ -75,6 +75,7 @@ def api_get(url):
 
 now_utc = datetime.now(timezone.utc)
 date_str = now_utc.strftime("%B %-d, %Y, %H:%M UTC")  # e.g. "June 22, 2026, 14:32 UTC"
+iso_str = now_utc.strftime("%Y-%m-%dT%H:%M:00Z")
 
 print(f"[{now_utc.isoformat()}] Fetching 9 Smart Links...")
 
@@ -147,8 +148,12 @@ with open("index.html", encoding="utf-8") as f:
 
 html = re.sub(r'var LINKS = \{.*?\};\nvar ALL', links_js + '\nvar ALL', html, flags=re.DOTALL)
 
-# Update the visible date badge in the header — just the date, no contractor names
-html = re.sub(r'(<span class="upd">)[^<]*(</span>)', r'\g<1>' + date_str + r'\g<2>', html)
+# Update the visible date badge in the header — text + machine-readable UTC timestamp
+html = re.sub(
+    r'<span class="upd"[^>]*>[^<]*</span>',
+    f'<span class="upd" data-utc="{iso_str}">{date_str}</span>',
+    html,
+)
 
 with open("index.html", "w", encoding="utf-8") as f:
     f.write(html)
