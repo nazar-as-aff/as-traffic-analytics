@@ -1,7 +1,7 @@
 """
 AS Talent Agency — Traffic Meta Auto-Update
 Runs via GitHub Actions on a schedule.
-Fetches OF API data for all 9 Smart Links and updates index.html in this repo.
+Fetches OF API data for all Smart Links and updates index.html in this repo.
 Netlify is connected to this repo via Continuous Deployment, so a git push
 to main automatically triggers a new deploy. This script does NOT call the
 Netlify API directly anymore — committing index.html is enough.
@@ -17,15 +17,16 @@ from datetime import datetime, timezone
 OF_API_KEY = os.environ["OF_API_KEY"]
 
 SMART_LINKS = [
-    {"id": "01KSPXD1G50JJQ6XYRPR1FD5GN", "model": "Octokura",      "con": "TD", "color": "#0ea5e9", "startDate": "2026-05-29"},
-    {"id": "01KT4EBCJW9Z7T73718FWF1GNS", "model": "Nancy Ace",     "con": "TD", "color": "#f59e0b", "startDate": "2026-06-02"},
-    {"id": "01KT736WE764G4R2JMXQEYHHXD", "model": "Ellie Bird",    "con": "TD", "color": "#8b5cf6", "startDate": "2026-06-03"},
-    {"id": "01KTXGC29Y0KVDMDWJDYTA5KW7", "model": "Emiri Momota",  "con": "TD", "color": "#14b8a6", "startDate": "2026-06-12"},
-    {"id": "01KTBSPQBQVM77HR203WHWXZB7", "model": "Chloe Temple",  "con": "VL", "color": "#ec4899", "startDate": "2026-06-05"},
-    {"id": "01KTBS3785SXY0E748E84XFQP7", "model": "Jennifer White","con": "VL", "color": "#f97316", "startDate": "2026-06-05"},
-    {"id": "01KTBQYWGAVZ1EAP0ABZE9V784", "model": "Amanda Essen",  "con": "VL", "color": "#10b981", "startDate": "2026-06-05"},
-    {"id": "01KTBQV7R1AAMDWY0NEQ7VC9CM", "model": "Ellie Bird",    "con": "VL", "color": "#8b5cf6", "startDate": "2026-06-05"},
-    {"id": "01KT47TPJJBK10C1WKH36H91X6", "model": "Nancy Ace",    "con": "VL", "color": "#f59e0b", "startDate": "2026-06-03"},
+    {"id": "01KSPXD1G50JJQ6XYRPR1FD5GN", "model": "Octokura",      "con": "TD", "color": "#0ea5e9", "startDate": "2026-05-29", "offer": "Free Trial"},
+    {"id": "01KT4EBCJW9Z7T73718FWF1GNS", "model": "Nancy Ace",     "con": "TD", "color": "#f59e0b", "startDate": "2026-06-02", "offer": "Free Trial"},
+    {"id": "01KT736WE764G4R2JMXQEYHHXD", "model": "Ellie Bird",    "con": "TD", "color": "#8b5cf6", "startDate": "2026-06-03", "offer": "Free Trial"},
+    {"id": "01KTXGC29Y0KVDMDWJDYTA5KW7", "model": "Emiri Momota",  "con": "TD", "color": "#14b8a6", "startDate": "2026-06-12", "offer": "Free Trial"},
+    {"id": "01KVSVDP1HEK77R67350QFA4GS", "model": "Emiri Momota",  "con": "TD", "color": "#65a30d", "startDate": "2026-06-23", "offer": "Tracking Link"},
+    {"id": "01KTBSPQBQVM77HR203WHWXZB7", "model": "Chloe Temple",  "con": "VL", "color": "#ec4899", "startDate": "2026-06-05", "offer": "Free Trial"},
+    {"id": "01KTBS3785SXY0E748E84XFQP7", "model": "Jennifer White","con": "VL", "color": "#f97316", "startDate": "2026-06-05", "offer": "Free Trial"},
+    {"id": "01KTBQYWGAVZ1EAP0ABZE9V784", "model": "Amanda Essen",  "con": "VL", "color": "#10b981", "startDate": "2026-06-05", "offer": "Free Trial"},
+    {"id": "01KTBQV7R1AAMDWY0NEQ7VC9CM", "model": "Ellie Bird",    "con": "VL", "color": "#8b5cf6", "startDate": "2026-06-05", "offer": "Free Trial"},
+    {"id": "01KT47TPJJBK10C1WKH36H91X6", "model": "Nancy Ace",    "con": "VL", "color": "#f59e0b", "startDate": "2026-06-03", "offer": "Free Trial"},
 ]
 
 GEO = {
@@ -74,10 +75,10 @@ def api_get(url):
         return json.loads(r.read())
 
 now_utc = datetime.now(timezone.utc)
-date_str = now_utc.strftime("%B %-d, %Y, %H:%M UTC")  # e.g. "June 22, 2026, 14:32 UTC"
+date_str = now_utc.strftime("%d.%m.%Y, %H:%M UTC")  # e.g. "22.06.2026, 14:32 UTC"
 iso_str = now_utc.strftime("%Y-%m-%dT%H:%M:00Z")
 
-print(f"[{now_utc.isoformat()}] Fetching 9 Smart Links...")
+print(f"[{now_utc.isoformat()}] Fetching {len(SMART_LINKS)} Smart Links...")
 
 td_links = []
 vl_links = []
@@ -99,6 +100,7 @@ for lnk in SMART_LINKS:
             "startDate": lnk["startDate"],
             "model": lnk["model"],
             "color": lnk["color"],
+            "offer": lnk["offer"],
             "clicks": s["clicks_total"],
             "subs": s["subs_total"],
             "spenders": s["spenders_total"],
@@ -131,7 +133,7 @@ def link_to_js(l):
     daily = json.dumps(l["daily"]).replace('"d"', 'd').replace('"c"', 'c').replace('"s"', 's').replace('"sp"', 'sp').replace('"r"', 'r')
     return (
         f"    {{id:'{l['id']}',startDate:'{l['startDate']}',model:'{l['model']}',"
-        f"color:'{l['color']}',clicks:{l['clicks']},subs:{l['subs']},"
+        f"color:'{l['color']}',offer:'{l['offer']}',clicks:{l['clicks']},subs:{l['subs']},"
         f"spenders:{l['spenders']},revenue:{l['revenue']},msgs3:{l['msgs3']},"
         f"geo:{geo},devs:{devs},daily:{daily}}}"
     )
