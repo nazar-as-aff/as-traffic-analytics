@@ -11,7 +11,7 @@ import os
 import json
 import re
 import urllib.request
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 # ── CONFIG ─────────────────────────────────────────────────────────────────
 OF_API_KEY = os.environ["OF_API_KEY"]
@@ -29,29 +29,8 @@ SMART_LINKS = [
     {"id": "01KT47TPJJBK10C1WKH36H91X6", "model": "Nancy Ace",    "con": "VL", "color": "#f59e0b", "startDate": "2026-06-03", "offer": "Free Trial"},
 ]
 
-GEO = {
-    "01KSPXD1G50JJQ6XYRPR1FD5GN": [{"c":"US","n":39,"s":42.9},{"c":"GB","n":16,"s":17.6},{"c":"AU","n":15,"s":16.5},{"c":"FR","n":9,"s":9.9},{"c":"CA","n":6,"s":6.6},{"c":"Other","n":6,"s":6.6}],
-    "01KT4EBCJW9Z7T73718FWF1GNS": [{"c":"US","n":28,"s":40.6},{"c":"GB","n":15,"s":21.7},{"c":"CA","n":12,"s":17.4},{"c":"AU","n":8,"s":11.6},{"c":"Other","n":6,"s":8.7}],
-    "01KT736WE764G4R2JMXQEYHHXD": [{"c":"US","n":22,"s":37.3},{"c":"GB","n":14,"s":23.7},{"c":"CA","n":10,"s":16.9},{"c":"AU","n":7,"s":11.9},{"c":"Other","n":6,"s":10.2}],
-    "01KTXGC29Y0KVDMDWJDYTA5KW7": [{"c":"US","n":40,"s":64.5},{"c":"UA","n":1,"s":1.6},{"c":"PL","n":1,"s":1.6},{"c":"Other","n":20,"s":32.3}],
-    "01KTBSPQBQVM77HR203WHWXZB7": [{"c":"US","n":609,"s":52.5},{"c":"GB","n":321,"s":27.6},{"c":"CA","n":215,"s":18.5},{"c":"NL","n":3,"s":0.3},{"c":"Other","n":6,"s":0.5}],
-    "01KTBS3785SXY0E748E84XFQP7": [{"c":"US","n":52,"s":38.2},{"c":"GB","n":42,"s":30.9},{"c":"CA","n":28,"s":20.6},{"c":"AU","n":12,"s":8.8},{"c":"Other","n":6,"s":1.5}],
-    "01KTBQYWGAVZ1EAP0ABZE9V784": [{"c":"US","n":88,"s":50.3},{"c":"GB","n":42,"s":24.0},{"c":"CA","n":28,"s":16.0},{"c":"AU","n":12,"s":6.9},{"c":"Other","n":5,"s":2.9}],
-    "01KTBQV7R1AAMDWY0NEQ7VC9CM": [{"c":"US","n":88,"s":50.3},{"c":"GB","n":42,"s":24.0},{"c":"CA","n":28,"s":16.0},{"c":"AU","n":12,"s":6.9},{"c":"Other","n":5,"s":2.9}],
-    "01KT47TPJJBK10C1WKH36H91X6": [{"c":"US","n":30,"s":41.7},{"c":"GB","n":18,"s":25.0},{"c":"CA","n":14,"s":19.4},{"c":"AU","n":6,"s":8.3},{"c":"Other","n":4,"s":5.6}],
-}
-
-DEVS = {
-    "01KSPXD1G50JJQ6XYRPR1FD5GN": [{"d":"Mobile","n":62,"s":68.1,"cl":"#1570ef"},{"d":"Bot","n":28,"s":30.8,"cl":"#f04438"},{"d":"Desktop","n":1,"s":1.1,"cl":"#10b981"}],
-    "01KT4EBCJW9Z7T73718FWF1GNS": [{"d":"Mobile","n":52,"s":75.4,"cl":"#1570ef"},{"d":"Bot","n":15,"s":21.7,"cl":"#f04438"},{"d":"Desktop","n":2,"s":2.9,"cl":"#10b981"}],
-    "01KT736WE764G4R2JMXQEYHHXD": [{"d":"Mobile","n":34,"s":68.0,"cl":"#1570ef"},{"d":"Bot","n":16,"s":32.0,"cl":"#f04438"}],
-    "01KTXGC29Y0KVDMDWJDYTA5KW7": [{"d":"Mobile","n":2,"s":66.7,"cl":"#1570ef"},{"d":"Desktop","n":1,"s":33.3,"cl":"#10b981"}],
-    "01KTBSPQBQVM77HR203WHWXZB7": [{"d":"Mobile","n":1466,"s":100,"cl":"#1570ef"}],
-    "01KTBS3785SXY0E748E84XFQP7": [{"d":"Mobile","n":1800,"s":80.2,"cl":"#1570ef"},{"d":"Bot","n":400,"s":17.8,"cl":"#f04438"},{"d":"Desktop","n":44,"s":2.0,"cl":"#10b981"}],
-    "01KTBQYWGAVZ1EAP0ABZE9V784": [{"d":"Mobile","n":148,"s":79.6,"cl":"#1570ef"},{"d":"Bot","n":32,"s":17.2,"cl":"#f04438"},{"d":"Desktop","n":6,"s":3.2,"cl":"#10b981"}],
-    "01KTBQV7R1AAMDWY0NEQ7VC9CM": [{"d":"Mobile","n":136,"s":77.7,"cl":"#1570ef"},{"d":"Bot","n":35,"s":20.0,"cl":"#f04438"},{"d":"Desktop","n":4,"s":2.3,"cl":"#10b981"}],
-    "01KT47TPJJBK10C1WKH36H91X6": [{"d":"Mobile","n":57,"s":79.2,"cl":"#1570ef"},{"d":"Bot","n":13,"s":18.1,"cl":"#f04438"},{"d":"Desktop","n":2,"s":2.8,"cl":"#10b981"}],
-}
+GEO = {}   # populated live below from the same 30-day click data used for Fraud Detection
+DEVS = {}  # populated live below from the same 30-day click data used for Fraud Detection
 
 MSGS3 = {
     "01KSPXD1G50JJQ6XYRPR1FD5GN": 17, "01KT4EBCJW9Z7T73718FWF1GNS": 8,
@@ -60,6 +39,12 @@ MSGS3 = {
     "01KTBQYWGAVZ1EAP0ABZE9V784": 14, "01KTBQV7R1AAMDWY0NEQ7VC9CM": 15,
     "01KT47TPJJBK10C1WKH36H91X6": 8,
 }
+
+# ── FRAUD DETECTION CONFIG ───────────────────────────────────────────────────
+FRAUD_LOOKBACK_DAYS = 30   # rolling window for bot-rate stats & click log (not all-time)
+FRAUD_MAX_PAGES_PER_LINK = 40   # safety cap: 40 * 100 = 4,000 clicks/link max per run
+FRAUD_LOG_PER_LINK = 30    # most recent rows per link kept for the detail click log
+FRAUD_LOG_MAX_TOTAL = 250  # total rows kept in the click log across all links (keeps file size sane)
 
 # ── FETCH OF API ────────────────────────────────────────────────────────────
 def api_get(url):
@@ -77,14 +62,137 @@ def api_get(url):
 now_utc = datetime.now(timezone.utc)
 date_str = now_utc.strftime("%d.%m.%Y, %H:%M UTC")  # e.g. "22.06.2026, 14:32 UTC"
 iso_str = now_utc.strftime("%Y-%m-%dT%H:%M:00Z")
+fraud_since = (now_utc - timedelta(days=FRAUD_LOOKBACK_DAYS)).strftime("%Y-%m-%d")
+
+def classify_bot(row):
+    """Classify a bot click into a subtype based on browser_name/family/user_agent."""
+    name = (row.get("browser_name") or "").lower()
+    family = (row.get("browser_family") or "").lower()
+    ua = (row.get("user_agent") or "").lower()
+    if "facebook" in name or "facebook" in family:
+        return "fb"
+    if "telegram" in name or "telegram" in ua:
+        return "tg"
+    if "crawler" in name or "crawler" in family or "meta-externalads" in ua:
+        return "meta"
+    return "other"
+
+def fmt_click_time(iso):
+    try:
+        return iso.replace("T", " ")[:16]
+    except Exception:
+        return iso
+
+def fetch_clicks(link_id):
+    """Paginate through listSmartLinkClicks for the rolling fraud window."""
+    rows = []
+    offset = 0
+    for _ in range(FRAUD_MAX_PAGES_PER_LINK):
+        url = (
+            f"https://app.onlyfansapi.com/api/smart-links/{link_id}/clicks"
+            f"?date_start={fraud_since}&limit=100&offset={offset}"
+            f"&include_bots=true&include_duplicates=true"
+        )
+        data = api_get(url)
+        page_rows = data["data"]["rows"]
+        rows.extend(page_rows)
+        if len(page_rows) < 100:
+            break
+        offset += 100
+    return rows
+
+DEVICE_COLORS = {"Mobile": "#1570ef", "Bot": "#f04438", "Desktop": "#10b981", "Tablet": "#f59e0b", "Other": "#98a2b3"}
+
+def aggregate_geo(clicks, top_n=4):
+    """Country breakdown of clicks -> [{c, n, s%}], top N + 'Other' bucket, sorted desc."""
+    counts = {}
+    for c in clicks:
+        cc = c.get("country_code") or "Other"
+        counts[cc] = counts.get(cc, 0) + 1
+    total = sum(counts.values())
+    if not total:
+        return []
+    ordered = sorted(counts.items(), key=lambda kv: kv[1], reverse=True)
+    top = ordered[:top_n]
+    rest = ordered[top_n:]
+    result = [{"c": cc, "n": n, "s": round(n / total * 100, 1)} for cc, n in top]
+    if rest:
+        rest_n = sum(n for _, n in rest)
+        result.append({"c": "Other", "n": rest_n, "s": round(rest_n / total * 100, 1)})
+    return result
+
+def aggregate_devices(clicks):
+    """Device-type breakdown of clicks -> [{d, n, s%, cl}], sorted desc."""
+    counts = {}
+    for c in clicks:
+        dt = c.get("browser_device_type") or "Other"
+        counts[dt] = counts.get(dt, 0) + 1
+    total = sum(counts.values())
+    if not total:
+        return []
+    ordered = sorted(counts.items(), key=lambda kv: kv[1], reverse=True)
+    return [
+        {"d": dt, "n": n, "s": round(n / total * 100, 1), "cl": DEVICE_COLORS.get(dt, "#98a2b3")}
+        for dt, n in ordered
+    ]
 
 print(f"[{now_utc.isoformat()}] Fetching {len(SMART_LINKS)} Smart Links...")
 
 td_links = []
 vl_links = []
 errors = []
+fstats_list = []
+fclicks_list = []
 
 for lnk in SMART_LINKS:
+    # ── FRAUD DETECTION + live geo/device aggregation (runs first: entry below needs the result) ──
+    live_geo, live_devs = [], []
+    try:
+        clicks = fetch_clicks(lnk["id"])
+        total = len(clicks)
+        bots = sum(1 for c in clicks if c.get("is_bot"))
+        real = total - bots
+        tg = fb = meta = other_bot = 0
+        for c in clicks:
+            if not c.get("is_bot"):
+                continue
+            cls = classify_bot(c)
+            if cls == "fb": fb += 1
+            elif cls == "tg": tg += 1
+            elif cls == "meta": meta += 1
+            else: other_bot += 1
+        fstats_list.append({
+            "model": lnk["model"], "con": lnk["con"], "color": lnk["color"],
+            "total": total, "bots": bots, "tgBot": tg, "fbBot": fb,
+            "metaCrl": meta, "otherBot": other_bot, "real": real,
+        })
+        bot_pct = round(bots / total * 100) if total else 0
+        print(f"  FRAUD {lnk['model']}: {total} clicks in last {FRAUD_LOOKBACK_DAYS}d, {bots} bots ({bot_pct}%)")
+
+        # live geo/device breakdown — same 30-day click data, no extra API calls
+        live_geo = aggregate_geo(clicks)
+        live_devs = aggregate_devices(clicks)
+
+        # most recent rows for the detail log (API returns newest-first)
+        for c in clicks[:FRAUD_LOG_PER_LINK]:
+            fclicks_list.append({
+                "t": fmt_click_time(c.get("created_at", "")),
+                "con": lnk["con"],
+                "model": lnk["model"],
+                "lid": lnk["id"],
+                "ip": c.get("ip_address") or "—",
+                "ua": c.get("user_agent") or c.get("browser_name") or "Unknown",
+                "id": c.get("id", ""),
+                "country": c.get("country_code") or "Other",
+                "device": c.get("browser_device_type") or "Other",
+                "gross": c.get("gross_clicks", 1),
+                "bot": bool(c.get("is_bot")),
+            })
+    except Exception as e:
+        print(f"  FRAUD ERR {lnk['model']}: {e}")
+    GEO[lnk["id"]] = live_geo
+    DEVS[lnk["id"]] = live_devs
+
     try:
         url = f"https://app.onlyfansapi.com/api/smart-links/{lnk['id']}/stats"
         data = api_get(url)
@@ -126,6 +234,11 @@ if not td_links and not vl_links:
     print("FATAL: no data fetched for any link. Aborting without touching index.html.")
     raise SystemExit(1)
 
+# keep only the most recent N rows across all links, newest first
+fclicks_list.sort(key=lambda r: r["t"], reverse=True)
+fclicks_list = fclicks_list[:FRAUD_LOG_MAX_TOTAL]
+
+
 # ── BUILD LINKS JS ──────────────────────────────────────────────────────────
 def link_to_js(l):
     geo = json.dumps(l["geo"]).replace('"c"', 'c').replace('"n"', 'n').replace('"s"', 's')
@@ -144,11 +257,27 @@ links_js += "\n  ],\n  VL: [\n"
 links_js += ",\n".join(link_to_js(l) for l in vl_links)
 links_js += "\n  ]\n};"
 
+def to_js_array(items, unquote_keys):
+    """json.dumps an array of dicts, then strip quotes from known object keys
+    so it matches the unquoted-key JS object literal style used elsewhere
+    in this file (var LINKS, GEO, DEVS)."""
+    s = json.dumps(items)
+    for k in unquote_keys:
+        s = re.sub(r'"%s":' % re.escape(k), '%s:' % k, s)
+    return s
+
+FSTATS_KEYS = ["model", "con", "color", "total", "bots", "tgBot", "fbBot", "metaCrl", "otherBot", "real"]
+FCLICKS_KEYS = ["t", "con", "model", "lid", "ip", "ua", "id", "country", "device", "gross", "bot"]
+fstats_js = to_js_array(fstats_list, FSTATS_KEYS)
+fclicks_js = to_js_array(fclicks_list, FCLICKS_KEYS)
+
 # ── UPDATE index.html ───────────────────────────────────────────────────────
 with open("index.html", encoding="utf-8") as f:
     html = f.read()
 
 html = re.sub(r'var LINKS = \{.*?\};\nvar ALL', links_js + '\nvar ALL', html, flags=re.DOTALL)
+html = re.sub(r'var FSTATS=\[.*?\];', f'var FSTATS={fstats_js};', html, flags=re.DOTALL)
+html = re.sub(r'var FCLICKS=\[.*?\];', f'var FCLICKS={fclicks_js};', html, flags=re.DOTALL)
 
 # Update the visible date badge in the header — text + machine-readable UTC timestamp
 html = re.sub(
@@ -160,4 +289,4 @@ html = re.sub(
 with open("index.html", "w", encoding="utf-8") as f:
     f.write(html)
 
-print("index.html updated successfully. Netlify will redeploy automatically after git push.")
+print(f"index.html updated successfully ({len(fclicks_list)} fraud log rows, {len(fstats_list)} model bot-stats). Netlify will redeploy automatically after git push.")
