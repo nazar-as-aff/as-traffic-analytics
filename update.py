@@ -42,7 +42,7 @@ MSGS3 = {
 
 # ── FRAUD DETECTION CONFIG ───────────────────────────────────────────────────
 FRAUD_LOOKBACK_DAYS = 30   # rolling window for bot-rate stats & click log (not all-time)
-FRAUD_MAX_PAGES_PER_LINK = 40   # safety cap: 40 * 100 = 4,000 clicks/link max per run
+FRAUD_MAX_PAGES_PER_LINK = 100  # safety cap: 100 * 100 = 10,000 clicks/link max per run
 FRAUD_LOG_PER_LINK = 30    # most recent rows per link kept for the detail click log
 FRAUD_LOG_MAX_TOTAL = 250  # total rows kept in the click log across all links (keeps file size sane)
 
@@ -87,6 +87,7 @@ def fetch_clicks(link_id):
     """Paginate through listSmartLinkClicks for the rolling fraud window."""
     rows = []
     offset = 0
+    hit_cap = True
     for _ in range(FRAUD_MAX_PAGES_PER_LINK):
         url = (
             f"https://app.onlyfansapi.com/api/smart-links/{link_id}/clicks"
@@ -97,8 +98,12 @@ def fetch_clicks(link_id):
         page_rows = data["data"]["rows"]
         rows.extend(page_rows)
         if len(page_rows) < 100:
+            hit_cap = False
             break
         offset += 100
+    if hit_cap:
+        print(f"  FRAUD WARNING: link {link_id} hit the {FRAUD_MAX_PAGES_PER_LINK}-page cap "
+              f"({len(rows)} clicks) — true volume may be higher, bot-rate stats are a lower bound.")
     return rows
 
 DEVICE_COLORS = {"Mobile": "#1570ef", "Bot": "#f04438", "Desktop": "#10b981", "Tablet": "#f59e0b", "Other": "#98a2b3"}
