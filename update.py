@@ -17,6 +17,7 @@ from datetime import datetime, timezone, timedelta
 OF_API_KEY = os.environ["OF_API_KEY"]
 
 SMART_LINKS = [
+    {"id": "01KW9BHKKESX6F9STJGD5B4NJX", "model": "Octocuro",     "con": "YR", "color": "#7c3aed", "startDate": "2026-07-02", "offer": "Free Trial"},
     {"id": "01KSPXD1G50JJQ6XYRPR1FD5GN", "model": "Octokura",      "con": "TD", "color": "#0ea5e9", "startDate": "2026-05-29", "offer": "Free Trial"},
     {"id": "01KT4EBCJW9Z7T73718FWF1GNS", "model": "Nancy Ace",     "con": "TD", "color": "#f59e0b", "startDate": "2026-06-02", "offer": "Free Trial"},
     {"id": "01KT736WE764G4R2JMXQEYHHXD", "model": "Ellie Bird",    "con": "TD", "color": "#8b5cf6", "startDate": "2026-06-03", "offer": "Free Trial"},
@@ -33,6 +34,7 @@ GEO = {}   # populated live below from the same 30-day click data used for Fraud
 DEVS = {}  # populated live below from the same 30-day click data used for Fraud Detection
 
 MSGS3 = {
+    "01KW9BHKKESX6F9STJGD5B4NJX": 0,   # Octocuro (YR) — new
     "01KSPXD1G50JJQ6XYRPR1FD5GN": 17, "01KT4EBCJW9Z7T73718FWF1GNS": 8,
     "01KT736WE764G4R2JMXQEYHHXD": 1,  "01KTXGC29Y0KVDMDWJDYTA5KW7": 1,
     "01KTBSPQBQVM77HR203WHWXZB7": 7,  "01KTBS3785SXY0E748E84XFQP7": 11,
@@ -145,6 +147,7 @@ print(f"[{now_utc.isoformat()}] Fetching {len(SMART_LINKS)} Smart Links...")
 
 td_links = []
 vl_links = []
+yr_links = []
 errors = []
 fstats_list = []
 fclicks_list = []
@@ -224,7 +227,9 @@ for lnk in SMART_LINKS:
             "daily": daily,
         }
         print(f"  OK {lnk['model']} ({lnk['con']}): {entry['clicks']} clicks / {entry['subs']} subs / ${entry['revenue']:.2f}")
-        if lnk["con"] == "TD":
+        if lnk["con"] == "YR":
+            yr_links.append(entry)
+        elif lnk["con"] == "TD":
             td_links.append(entry)
         else:
             vl_links.append(entry)
@@ -235,7 +240,7 @@ for lnk in SMART_LINKS:
 if errors:
     print(f"WARNING: {len(errors)} link(s) failed: {', '.join(errors)}")
 
-if not td_links and not vl_links:
+if not yr_links and not td_links and not vl_links:
     print("FATAL: no data fetched for any link. Aborting without touching index.html.")
     raise SystemExit(1)
 
@@ -256,7 +261,9 @@ def link_to_js(l):
         f"geo:{geo},devs:{devs},daily:{daily}}}"
     )
 
-links_js = "var LINKS = {\n  TD: [\n"
+links_js = "var LINKS = {\n  YR: [\n"
+links_js += ",\n".join(link_to_js(l) for l in yr_links)
+links_js += "\n  ],\n  TD: [\n"
 links_js += ",\n".join(link_to_js(l) for l in td_links)
 links_js += "\n  ],\n  VL: [\n"
 links_js += ",\n".join(link_to_js(l) for l in vl_links)
