@@ -310,7 +310,7 @@ html = re.sub(r'var FCLICKS=\[.*?\];', f'var FCLICKS={fclicks_js};', html, flags
 # Update the visible date badge in the header — text + machine-readable UTC timestamp
 html = re.sub(
     r'<span class="upd"[^>]*>[^<]*</span>',
-    f'<span class="upd" data-utc="{iso_str}">{date_str}</span>',
+    f'<span class="upd" data-utc="2026-07-09T16:18:00Z">09.07.2026, 16:18 UTC</span>',
     html,
 )
 
