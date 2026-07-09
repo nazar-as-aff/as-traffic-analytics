@@ -1,320 +1,1162 @@
-"""
-AS Talent Agency — Traffic Meta Auto-Update
-Runs via GitHub Actions on a schedule.
-Fetches OF API data for all Smart Links and updates index.html in this repo.
-Netlify is connected to this repo via Continuous Deployment, so a git push
-to main automatically triggers a new deploy. This script does NOT call the
-Netlify API directly anymore — committing index.html is enough.
-"""
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Traffic Analytics — AS Talent Agency</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23FD4A9E'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='central' text-anchor='middle' font-family='Arial Black,Arial,sans-serif' font-weight='900' font-size='18' fill='white'%3EAS%3C/text%3E%3C/svg%3E">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{--bg:#f5f6f8;--white:#fff;--border:#e4e7ec;--bl:#f0f2f5;--t1:#101828;--t2:#475467;--t3:#98a2b3;--ac:#1570ef;--acbg:#eff4ff;--gr:#067647;--grbg:#ecfdf3;--rd:#b42318;--rdbg:#fef3f2;--am:#b54708;--ambg:#fffaeb;--rsm:8px;--rmd:12px;--sh:0 1px 3px rgba(16,24,40,.06);}
+html.dark{--bg:#0f1117;--white:#1a1d27;--border:#2a2d3a;--bl:#1f2230;--t1:#f0f2f7;--t2:#9399b2;--t3:#5c6278;--ac:#4d94ff;--acbg:#1a2a4a;--gr:#22c55e;--grbg:#0f2a1a;--rd:#f87171;--rdbg:#2a1212;--am:#fbbf24;--ambg:#2a1f08;--sh:0 1px 4px rgba(0,0,0,.35);}
+html.dark .hdr{background:#13151f;border-color:#2a2d3a;}
+html.dark .badge,.dark .cbadge{filter:brightness(.85);}
+html.dark .cbd-yr{background:#1e1a3a;color:#a78bfa;}
+html.dark .cbd-td{background:#0d2218;color:#4ade80;}
+html.dark .cbd-vl{background:#0d1e3a;color:#60a5fa;}
+html.dark .cbd-ol{background:#082f36;color:#22d3ee;}
+html.dark .status.st-a{background:#0d2218;color:#4ade80;}
+html.dark .status.st-t{background:#2a1f08;color:#fbbf24;}
+html.dark .status.st-s{background:#2a1212;color:#f87171;}
+html.dark .sm{background:#1a2a4a;color:#60a5fa;}
+html.dark .so{background:#1e1a3a;color:#a78bfa;}
+html.dark .badge.b-g{background:#0d2218;color:#4ade80;}
+html.dark .badge.b-r{background:#2a1212;color:#f87171;}
+html.dark .badge.b-b{background:#1a2a4a;color:#60a5fa;}
+html.dark .badge.b-a{background:#2a1f08;color:#fbbf24;}
+html.dark .badge.b-p{background:#1e1a3a;color:#a78bfa;}
+html.dark .is-bot{background:#1e1212 !important;}
+html.dark .fr-ok{background:#0d2218;color:#4ade80;}
+html.dark .fr-bot{background:#2a1212;color:#f87171;}
+html.dark input,html.dark select,html.dark textarea{background:var(--white);color:var(--t1);border-color:var(--border);}
+html.dark .inp{background:var(--white);color:var(--t1);}
+html.dark .bar-track{background:#2a2d3a;}
+html.dark .upd{background:var(--bg);border-color:var(--border);}
+html.dark .tab.active{background:#2a2d3a;}
+html.dark .theme-btn{background:#2a2d3a;color:var(--t1);}
 
-import os
-import json
-import re
-import urllib.request
-from datetime import datetime, timezone, timedelta
+.theme-btn{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;border:1px solid var(--border);background:var(--bg);color:var(--t2);cursor:pointer;transition:all .15s;white-space:nowrap;user-select:none;}
+.theme-btn:hover{border-color:var(--ac);color:var(--ac);}
+html.dark .theme-btn:hover{border-color:#4d94ff;color:#4d94ff;background:#1f2230;}
+.theme-btn svg{width:13px;height:13px;flex-shrink:0;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--t1);font-size:14px;line-height:1.5;transition:background .2s,color .2s;}
+.hdr,.card,.kpi,.con-hdr,.tabs,.tab,.btn,.badge,.cbadge,.fr-tbl td,.fr-tbl th,.tbl td,.tbl th,.panel,.pov,.card-hdr{transition:background .2s,border-color .2s,color .2s,box-shadow .2s;}
+.hdr{background:var(--white);border-bottom:1px solid var(--border);border-top:3px solid #FD4A9E;padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;}
+.hdr-l{display:flex;align-items:center;gap:12px;}
+.brand-logo{height:30px;width:auto;display:flex;align-items:center;flex-shrink:0;}
+.brand-logo svg{height:30px;width:auto;display:block;}
+.logo{font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--ac);}
+.sep{width:1px;height:16px;background:var(--border);}
+.upd{font-size:11px;color:var(--t3);background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:2px 10px;}
+.sbadge{font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px;}
+.sm{background:#e7f0ff;color:#1557b0;}.so{background:#f4f3ff;color:#5b21b6;}
+.main{max-width:1440px;margin:0 auto;padding:20px 16px 60px;}
+.page-h h1{font-size:18px;font-weight:600;margin-bottom:2px;}
+.page-h p{font-size:12px;color:var(--t2);margin-bottom:16px;}
+.tabs{display:flex;gap:1px;background:var(--border);border-radius:var(--rsm);padding:3px;margin-bottom:18px;width:fit-content;border:1px solid var(--border);}
+.tab{font-size:13px;font-weight:500;padding:5px 14px;border:none;border-radius:6px;background:transparent;color:var(--t2);cursor:pointer;white-space:nowrap;}
+.tab.active{background:var(--white);color:var(--t1);box-shadow:var(--sh);}
+.tab-c{display:none;}.tab-c.active{display:block;}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px;}
+.kpi{background:var(--white);border:1px solid var(--border);border-radius:var(--rmd);padding:12px 14px;box-shadow:var(--sh);}
+.kpi-l{font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--t3);margin-bottom:4px;}
+.kpi-v{font-size:20px;font-weight:700;line-height:1.15;margin-bottom:2px;}
+.kpi-s{font-size:11px;color:var(--t2);}
+.con{margin-bottom:18px;}
+.con-hdr{display:flex;align-items:center;gap:10px;margin-bottom:8px;padding:9px 14px;background:var(--white);border:1px solid var(--border);border-radius:var(--rmd);box-shadow:var(--sh);}
+.cbadge{font-size:11px;font-weight:700;letter-spacing:.04em;padding:3px 12px;border-radius:20px;flex-shrink:0;}
+.cbd-yr{background:#f5f3ff;color:#6d28d9;}.cbd-td{background:#ecfdf3;color:#067647;}.cbd-vl{background:#eff4ff;color:#1570ef;}.cbd-ol{background:#ecfeff;color:#0e7490;}
+.con-n{font-size:13px;font-weight:600;outline:none;border-bottom:1px dashed transparent;min-width:40px;max-width:220px;}
+.con-n:focus{border-color:var(--ac);border-style:solid;}
+.con-meta{font-size:12px;color:var(--t2);}
+.con-collapse-btn{all:unset;cursor:pointer;font-size:11px;width:18px;height:18px;display:flex;align-items:center;justify-content:center;border-radius:4px;color:var(--t2);opacity:.5;transition:opacity .15s,transform .15s,color .15s;flex-shrink:0;margin-left:auto;}
+.con-collapse-btn:hover{opacity:.9;color:var(--brand);}
+.con-collapse-btn.is-collapsed{opacity:.7;color:var(--brand);}
+.con-collapse-btn[disabled]{opacity:.12;pointer-events:none;cursor:default;}
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--rmd);box-shadow:var(--sh);margin-bottom:12px;overflow:hidden;}
+.card-hdr{padding:11px 16px;border-bottom:1px solid var(--bl);display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.card-t{font-size:13px;font-weight:600;}.card-s{font-size:11px;color:var(--t2);}
+.tbl{width:100%;border-collapse:collapse;}
+.tbl th{font-size:9px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--t3);padding:7px 8px;text-align:center;white-space:nowrap;border-bottom:1px solid var(--border);}
+.tbl th.thl{text-align:left;padding-left:10px;}
+.tbl td{padding:8px 8px;text-align:center;border-bottom:1px solid var(--bl);font-size:12px;vertical-align:middle;width:1px;white-space:nowrap;}
+.tbl td.tdl{text-align:left;padding-left:10px;font-weight:500;min-width:110px;white-space:nowrap;}
+.tbl td.tdl.td-offer{min-width:0;width:110px;max-width:110px;text-align:center;padding-left:6px;}
+.tbl th.th-offer{width:110px;max-width:110px;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl tbody tr:hover td{background:#fafbfc;}
+html.dark .tbl tbody tr:hover td{background:#1f2230 !important;}
+html.dark select{background:#2a2d3a !important;color:var(--t1) !important;border-color:#3a3d4a !important;}
+html.dark select option{background:#1a1d27;color:var(--t1);}
+html.dark .offerType-select,html.dark select[onchange^="changeOffer"]{background:#2a2d3a !important;color:#9399b2 !important;border-color:#3a3d4a !important;}
+.tbl .tr-tot td{background:var(--bg);font-weight:700;border-top:1.5px solid var(--border);}
+.tbl .tr-tot td.tdl{color:var(--t2);}
+.thw{display:inline-flex;align-items:center;gap:3px;}
+.tip-i{display:inline-flex;align-items:center;justify-content:center;width:13px;height:13px;border-radius:50%;background:var(--bl);color:var(--t3);font-size:9px;font-weight:700;cursor:help;border:1px solid var(--border);}
+.tip-box{display:none;position:fixed;background:#1e293b;color:#e2e8f0;font-size:11px;border-radius:7px;padding:8px 11px;width:210px;line-height:1.55;z-index:9999;box-shadow:0 6px 18px rgba(0,0,0,.3);pointer-events:none;}
+.status{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;cursor:pointer;border:none;outline:none;}
+.st-a{background:var(--grbg);color:var(--gr);}.st-t{background:var(--ambg);color:var(--am);}.st-s{background:var(--rdbg);color:var(--rd);}
+.st-dot{width:5px;height:5px;border-radius:50%;}
+.st-a .st-dot{background:#17b26a;}.st-t .st-dot{background:#f79009;}.st-s .st-dot{background:#f04438;}
+.badge{display:inline-flex;font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;}
+.b-g{background:var(--grbg);color:var(--gr);}.b-r{background:var(--rdbg);color:var(--rd);}
+.b-a{background:var(--ambg);color:var(--am);}.b-b{background:var(--acbg);color:var(--ac);}
+.b-p{background:#f4f3ff;color:#6941c6;}
+.mn{display:flex;align-items:center;gap:7px;}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.tab-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#FD4A9E;margin-right:6px;vertical-align:middle;}
+.bar-w{display:flex;align-items:center;justify-content:flex-end;gap:5px;}
+.bar-bg{height:4px;background:var(--bl);border-radius:2px;width:40px;flex-shrink:0;}
+.bar-f{height:4px;border-radius:2px;}
+.na{color:var(--t3);}
+.bg-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-bottom:16px;}
+.bg-row{background:var(--white);border:1px solid var(--border);border-radius:var(--rmd);padding:11px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;box-shadow:var(--sh);}
+.inp-w{display:flex;}
+.inp-pre{font-size:13px;color:var(--t2);padding:5px 7px 5px 10px;background:var(--bg);border:1px solid var(--border);border-right:none;border-radius:var(--rsm) 0 0 var(--rsm);}
+.inp{font-size:13px;font-weight:600;width:84px;padding:5px 8px;border:1px solid var(--border);border-left:none;border-radius:0 var(--rsm) var(--rsm) 0;background:var(--white);color:var(--t1);outline:none;text-align:right;}
+.btn{font-size:13px;font-weight:500;padding:6px 14px;border-radius:var(--rsm);border:none;cursor:pointer;}
+.btn-p{background:var(--ac);color:#fff;}.btn-g{background:transparent;color:var(--t2);border:1px solid var(--border);}
+.mc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin-bottom:20px;}
+.mc{background:var(--white);border:1px solid var(--border);border-radius:var(--rmd);padding:14px;cursor:pointer;box-shadow:var(--sh);transition:border-color .15s,transform .15s;}
+.mc:hover{border-color:var(--ac);transform:translateY(-2px);}
+.mc-name{font-size:13px;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.mc-row{display:flex;justify-content:space-between;font-size:11px;color:var(--t2);margin-bottom:4px;}
+.mc-val{font-weight:600;color:var(--t1);}
+.mc-msgs{display:flex;align-items:center;gap:4px;font-size:11px;margin-top:8px;padding-top:8px;border-top:1px solid var(--bl);color:var(--t2);}
+.mc-msgs-val{font-weight:700;color:#6941c6;}
+.mdot{width:6px;height:6px;border-radius:50%;background:#6941c6;flex-shrink:0;}
+.chart-split{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.chart-wrap{position:relative;height:200px;}
+.bar-item{margin-bottom:10px;}
+.bar-label{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;}
+.bar-track{height:8px;background:var(--bl);border-radius:4px;}
+.bar-fill{height:8px;border-radius:4px;transition:width .4s;}
+.pov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:500;align-items:center;justify-content:center;}
+.pov.open{display:flex;}
+.panel{background:var(--white);border-radius:16px;width:92%;max-width:1020px;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.22);}
+.p-hdr{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.p-title{font-size:15px;font-weight:600;}
+.p-close{font-size:20px;color:var(--t3);cursor:pointer;border:none;background:transparent;padding:2px 8px;line-height:1;}
+.p-body{overflow-y:auto;padding:20px;flex:1;}
+.p-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;}
+.p-charts{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;}
+.pcc{background:var(--bg);border-radius:var(--rmd);padding:14px;}
+.pcc-title{font-size:12px;font-weight:600;color:var(--t2);margin-bottom:12px;}
+.pcc-wrap{position:relative;height:180px;}
+.geo-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:12px;}
+.geo-c{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.fr-kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:14px;}
+.bot-bar{height:6px;background:var(--bl);border-radius:3px;margin-top:4px;}
+.bot-bar-f{height:6px;border-radius:3px;background:linear-gradient(90deg,#f04438,#fda29b);}
+.fr-filter-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:10px 14px;border-bottom:1px solid var(--bl);}
+.fr-filter-row .lbl{font-size:11px;color:var(--t3);font-weight:600;}
+.fr-btn{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;border:1px solid var(--border);background:var(--white);color:var(--t2);cursor:pointer;}
+.fr-btn.active{background:var(--t1);color:#fff;border-color:var(--t1);}
+.fr-btn.f-ok.active{background:var(--gr);border-color:var(--gr);}
+.fr-btn.f-bot.active{background:var(--rd);border-color:var(--rd);}
+.fr-tbl{width:100%;border-collapse:collapse;font-size:12px;}
+.fr-tbl th{font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--t3);padding:7px 10px;text-align:left;border-bottom:1px solid var(--border);background:var(--bg);}
+.fr-tbl td{padding:7px 10px;border-bottom:1px solid var(--bl);vertical-align:middle;}
+.fr-tbl tbody tr.is-bot{background:#fff8f8;}
+.fr-ok{display:inline-flex;font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;background:var(--grbg);color:var(--gr);}
+.fr-bot{display:inline-flex;font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;background:var(--rdbg);color:var(--rd);}
+.fr-ip{font-family:monospace;font-size:11px;color:var(--t3);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.fr-ua{max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--t2);font-size:11px;}
+.fr-time{color:var(--t3);font-size:11px;white-space:nowrap;}
+.daily-tbl-wrap{max-height:340px;overflow:auto;}
+.scope-btn{font-size:12px;font-weight:600;padding:5px 12px;border-radius:8px;border:1px solid var(--border);background:var(--white);color:var(--t2);cursor:pointer;}
+.scope-btn.active{background:var(--t1);color:#fff;border-color:var(--t1);}
+.range-inp{font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:var(--rsm);background:var(--white);color:var(--t1);outline:none;}
+.insight-box{border-left:3px solid var(--ac);background:var(--acbg);border-radius:0 var(--rsm) var(--rsm) 0;padding:10px 14px;font-size:12px;margin-bottom:8px;}
+.insight-box.warn{border-color:#f59e0b;background:#fffbeb;}
+.insight-box.good{border-color:var(--gr);background:var(--grbg);}
+.insight-box.bad{border-color:var(--rd);background:var(--rdbg);}
+.divider{height:1px;background:var(--bl);margin:14px 0;}
+.sec-lbl{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);margin-bottom:8px;}
+.info-box{background:var(--acbg);border-radius:var(--rmd);padding:11px 14px;font-size:12px;color:#1557b0;margin-top:8px;}
+.note{font-size:11px;color:var(--t3);margin-top:8px;padding:9px 12px;background:var(--bg);border-radius:var(--rsm);}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--t1);color:#fff;padding:8px 16px;border-radius:var(--rsm);font-size:13px;font-weight:500;opacity:0;transition:all .2s;z-index:9999;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.act-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--bl);}
+.act-inp{font-size:11px;font-weight:600;border:1px solid var(--border);border-radius:6px;padding:3px 6px;background:var(--white);outline:none;width:120px;text-align:center;cursor:pointer;color:var(--t1);}
+.mn-click{cursor:pointer;}
+.chev{flex-shrink:0;color:var(--t3);transition:transform .15s;}
+.det-wrap{padding:10px 16px 16px 36px;background:var(--bg);}
+.det-note{font-size:11px;color:var(--t3);margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.det-scroll{max-height:300px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--rsm);background:var(--white);}
+.det-tbl{width:100%;border-collapse:collapse;font-size:12px;}
+.det-tbl th{position:sticky;top:0;background:var(--white);font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--t3);padding:7px 10px;text-align:right;border-bottom:1px solid var(--border);}
+.det-tbl th:first-child{text-align:left;}
+.det-tbl td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--bl);}
+.det-tbl td:first-child{text-align:left;}
+.det-tbl tr:last-child td{border-bottom:none;}
+@media(max-width:900px){.main{padding:14px 12px 60px;}.chart-split,.p-charts,.p-kpis{grid-template-columns:1fr 1fr;}.kpi-row{grid-template-columns:repeat(2,1fr);}.panel{width:98%;max-height:94vh;}}
 
-# ── CONFIG ─────────────────────────────────────────────────────────────────
-OF_API_KEY = os.environ["OF_API_KEY"]
+.deco{position:fixed;pointer-events:none;z-index:0;user-select:none;transition:opacity .3s;}
+.deco-cherry{top:130px;left:14px;width:88px;opacity:.90;animation:deco-float 6s ease-in-out infinite;}
+.deco-heart{top:42%;right:10px;width:82px;opacity:.88;transform:rotate(12deg);animation:deco-float-hl 7s ease-in-out infinite 1s;}
+@keyframes deco-float{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
+@keyframes deco-float-hl{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+html.dark .deco{filter:drop-shadow(0 0 16px rgba(253,74,158,.3));}
 
-SMART_LINKS = [
-    # ── Yuriy (YR) ──────────────────────────────────────────────
-    {"id": "01KW9BHKKESX6F9STJGD5B4NJX", "model": "Octocuro",     "con": "YR", "color": "#7c3aed", "startDate": "2026-07-02", "offer": "Free Trial"},
-    {"id": "01KX3RM06SKCY288Q50JAWQSG4", "model": "E.Momota", "con": "YR", "color": "#e879a9", "startDate": "2026-07-08", "offer": "Free Trial"},
-    # ── Traffic Devils (TD) ─────────────────────────────────────
-    {"id": "01KSPXD1G50JJQ6XYRPR1FD5GN", "model": "Octokura",      "con": "TD", "color": "#0ea5e9", "startDate": "2026-05-29", "offer": "Free Trial"},
-    {"id": "01KT4EBCJW9Z7T73718FWF1GNS", "model": "Nancy Ace",     "con": "TD", "color": "#f59e0b", "startDate": "2026-06-02", "offer": "Free Trial"},
-    {"id": "01KT736WE764G4R2JMXQEYHHXD", "model": "Ellie Bird",    "con": "TD", "color": "#8b5cf6", "startDate": "2026-06-03", "offer": "Free Trial"},
-    {"id": "01KTXGC29Y0KVDMDWJDYTA5KW7", "model": "Emiri Momota",  "con": "TD", "color": "#14b8a6", "startDate": "2026-06-12", "offer": "Free Trial"},
-    {"id": "01KVSVDP1HEK77R67350QFA4GS", "model": "Emiri Momota",  "con": "TD", "color": "#65a30d", "startDate": "2026-06-23", "offer": "Tracking Link"},
-    {"id": "01KTBSPQBQVM77HR203WHWXZB7", "model": "Chloe Temple",  "con": "VL", "color": "#ec4899", "startDate": "2026-06-05", "offer": "Free Trial"},
-    {"id": "01KTBS3785SXY0E748E84XFQP7", "model": "Jennifer White","con": "VL", "color": "#f97316", "startDate": "2026-06-05", "offer": "Free Trial"},
-    {"id": "01KTBQYWGAVZ1EAP0ABZE9V784", "model": "Amanda Essen",  "con": "VL", "color": "#10b981", "startDate": "2026-06-05", "offer": "Free Trial"},
-    {"id": "01KTBQV7R1AAMDWY0NEQ7VC9CM", "model": "Ellie Bird",    "con": "VL", "color": "#8b5cf6", "startDate": "2026-06-05", "offer": "Free Trial"},
-    {"id": "01KT47TPJJBK10C1WKH36H91X6", "model": "Nancy Ace",    "con": "VL", "color": "#f59e0b", "startDate": "2026-06-03", "offer": "Free Trial"},
-    {"id": "01KX14VNRVBHW5KRPVDD7G4K1X", "model": "E.Momota s1", "con": "TD", "color": "#f43f5e", "startDate": "2026-07-09", "offer": "Free Trial"},
-    # ── Ocean Lead (OL) ─────────────────────────────────────────
-    {"id": "01KW9Q2FDB4BCWHMKANRJHQ5J7", "model": "E.Momota", "con": "OL", "color": "#e879a9", "startDate": "2026-07-02", "offer": "Free Trial"},
-    {"id": "01KW9S98BTQQPYC47G4AFXGFEV", "model": "Octocuro",     "con": "OL", "color": "#0891b2", "startDate": "2026-07-02", "offer": "Free Trial"},
-]
+.td-model-wrap{display:flex;align-items:center;gap:5px;}
+.lock-btn{all:unset;cursor:pointer;font-size:14px;line-height:1;flex-shrink:0;opacity:.35;transition:opacity .15s,transform .15s;}
+.lock-btn:hover{opacity:.75;transform:scale(1.15);}
+.lock-btn.is-locked{opacity:.9;}
+.tr-main[draggable="true"]{cursor:grab;}
+.tr-main[draggable="true"]:active{cursor:grabbing;}
+.tr-main{cursor:grab;}
+.tr-main:active{cursor:grabbing;}
+.tr-main.drag-over{outline:2px solid var(--brand);outline-offset:-2px;background:rgba(253,74,158,.07)!important;}
+html.dark .tr-main.drag-over{background:rgba(253,74,158,.1)!important;}
 
-GEO = {}   # populated live below from the same 30-day click data used for Fraud Detection
-DEVS = {}  # populated live below from the same 30-day click data used for Fraud Detection
+.con{position:relative;}
+.con-drag-over{outline:2px solid var(--brand);outline-offset:-2px;background:rgba(253,74,158,.04)!important;border-radius:var(--rmd);}
+.con-lock-btn{all:unset;cursor:pointer;font-size:13px;opacity:.3;transition:opacity .15s,transform .15s;flex-shrink:0;}
+.con-lock-btn:hover{opacity:.75;transform:scale(1.15);}
+.con-lock-btn.is-locked{opacity:.9;}
+.con[draggable="true"]{cursor:grab;}
+.con[draggable="true"]:active{cursor:grabbing;}
+.tbl-wrap{overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none;}
+.tbl-wrap::-webkit-scrollbar{display:none;}
+</style>
+</head>
+<body>
+<header class="hdr">
+  <div class="hdr-l">
+    <span class="brand-logo"><svg xmlns="http://www.w3.org/2000/svg" width="231" height="133" viewBox="0 0 231 133" fill="none">
+  <g clip-path="url(#clip0_18_172)">
+    <path d="M131.273 83.8349L137.785 68.0842H141.552L148.064 83.8349H145.014L143.489 79.9866H135.803L134.277 83.8349H131.273ZM136.61 77.8036H142.551L139.585 70.4195H139.538L136.61 77.8036Z" fill="#FD4A9E"></path>
+    <path d="M155.189 84.3425C153.728 84.3612 152.288 83.988 151.022 83.264C149.795 82.5565 148.789 81.5271 148.114 80.2884C147.413 78.9537 147.046 77.4695 147.046 75.9637C147.046 74.4578 147.413 72.9744 148.114 71.6389C148.817 70.3916 149.855 69.3619 151.112 68.6638C152.439 67.9275 153.938 67.5528 155.459 67.578C156.726 67.551 157.983 67.8051 159.139 68.3217C160.211 68.8128 161.143 69.565 161.844 70.5084C162.551 71.4713 163.023 72.5838 163.223 73.7583H160.345C160.101 72.6827 159.486 71.7254 158.607 71.0513C157.691 70.3719 156.571 70.0207 155.429 70.0547C154.416 70.0301 153.416 70.2878 152.543 70.7985C151.703 71.3038 151.023 72.033 150.579 72.9029C150.081 73.8486 149.823 74.9003 149.83 75.9673C149.819 77.0494 150.076 78.117 150.579 79.0764C151.034 79.9556 151.73 80.6883 152.588 81.1886C153.471 81.6968 154.477 81.9538 155.496 81.9328C156.348 81.9437 157.191 81.7632 157.962 81.4044C158.699 81.0608 159.346 80.5512 159.851 79.9166C160.366 79.2655 160.716 78.4996 160.87 77.6853H155.586V75.3876H163.329V83.9259H160.982V81.6203C160.337 82.4598 159.496 83.1312 158.532 83.5766C157.489 84.0761 156.347 84.3381 155.189 84.3425Z" fill="#FD4A9E"></path>
+    <path d="M165.873 83.8349V68.0842H176.265V70.4705H168.619V74.7631H173.993V77.1489H168.619V81.4491H177.066V83.8349H165.873Z" fill="#FD4A9E"></path>
+    <path d="M178.593 83.8349V68.0842H181.506L190.268 79.9425V68.0842H192.84V83.8349H189.941L181.231 71.9255V83.806L178.593 83.8349Z" fill="#FD4A9E"></path>
+    <path d="M203.465 84.3417C202.016 84.3634 200.587 83.9909 199.323 83.2625C198.105 82.5645 197.1 81.5336 196.421 80.2841C195.739 78.9501 195.383 77.4673 195.383 75.9615C195.383 74.4557 195.739 72.9722 196.421 71.639C197.099 70.3886 198.104 69.3572 199.323 68.6606C200.527 67.9887 201.869 67.6183 203.24 67.5794C204.61 67.5407 205.97 67.8345 207.209 68.4372C208.296 68.99 209.226 69.8209 209.908 70.8497C210.605 71.897 211.032 73.1086 211.149 74.3719H208.428C208.301 73.5641 207.99 72.799 207.522 72.1378C207.073 71.5041 206.48 70.9928 205.794 70.6486C205.076 70.3005 204.289 70.1248 203.494 70.1349C202.526 70.1198 201.573 70.3774 200.737 70.8795C199.929 71.3675 199.274 72.0834 198.851 72.9419C198.407 73.8861 198.176 74.9205 198.176 75.9687C198.176 77.0169 198.407 78.0513 198.851 78.9955C199.276 79.8531 199.931 80.5685 200.737 81.0579C201.508 81.5019 202.369 81.7531 203.252 81.7906C204.135 81.8282 205.013 81.6513 205.817 81.2745C206.504 80.9367 207.096 80.4241 207.536 79.7853C207.997 79.1204 208.302 78.356 208.428 77.5511H211.156C211.025 78.8151 210.589 80.0256 209.886 81.0731C209.197 82.0967 208.266 82.924 207.18 83.4784C206.027 84.066 204.753 84.362 203.465 84.3417Z" fill="#FD4A9E"></path>
+    <path d="M216.116 83.8349V78.1386L209.122 68.0842H212.473L217.597 75.4395L222.675 68.0842H225.912L218.948 78.1386V83.8349H216.116Z" fill="#FD4A9E"></path>
+    <path d="M117.531 70.6248C116.985 70.6283 116.448 70.4912 115.97 70.2265C115.515 69.9673 115.137 69.5904 114.878 69.1354C114.618 68.6564 114.482 68.12 114.482 67.575C114.482 67.0301 114.618 66.4939 114.878 66.0148C115.137 65.5598 115.515 65.1829 115.97 64.9236C116.449 64.6639 116.986 64.5278 117.531 64.5278C118.076 64.5278 118.613 64.6639 119.093 64.9236C119.55 65.1807 119.927 65.5581 120.184 66.0148C120.449 66.4923 120.588 67.0291 120.588 67.575C120.588 68.121 120.449 68.658 120.184 69.1354C119.927 69.5921 119.55 69.9695 119.093 70.2265C118.615 70.4912 118.077 70.6283 117.531 70.6248ZM117.531 70.3029C118.021 70.3088 118.503 70.1845 118.929 69.9428C119.342 69.7098 119.684 69.3683 119.917 68.9553C120.153 68.5278 120.277 68.0472 120.277 67.5586C120.277 67.0701 120.153 66.5897 119.917 66.1621C119.686 65.7459 119.344 65.4021 118.929 65.1691C118.501 64.9327 118.02 64.8087 117.531 64.8087C117.042 64.8087 116.562 64.9327 116.134 65.1691C115.719 65.4006 115.377 65.7425 115.145 66.1567C114.909 66.5842 114.785 67.0648 114.785 67.5534C114.785 68.0418 114.909 68.5223 115.145 68.9499C115.379 69.3629 115.721 69.7043 116.134 69.9374C116.558 70.1848 117.04 70.3147 117.531 70.3138V70.3029ZM116.183 69.2117V65.7365H117.548C117.904 65.7182 118.255 65.8201 118.547 66.0257C118.667 66.1211 118.762 66.2434 118.825 66.3828C118.889 66.5222 118.919 66.6746 118.912 66.8277C118.918 67.0503 118.855 67.2692 118.732 67.455C118.61 67.6357 118.435 67.7732 118.23 67.8478L119.251 69.2117H118.383L117.465 67.9679H116.849V69.2117H116.183ZM117.564 67.3732C117.735 67.382 117.904 67.334 118.044 67.2369C118.099 67.1909 118.143 67.1332 118.172 67.068C118.201 67.0028 118.215 66.9319 118.213 66.8604C118.215 66.7915 118.2 66.7232 118.171 66.6608C118.141 66.5984 118.098 66.5435 118.044 66.5003C117.904 66.4031 117.735 66.3552 117.564 66.3639H116.866V67.3732H117.564Z" fill="#05021D"></path>
+    <path d="M136.105 64.1104V57.7212H133.308V56.4783H140.167V57.7212H137.381V64.1104H136.105Z" fill="#FD4A9E"></path>
+    <path d="M139.537 64.1104L142.472 56.4783H144.174L147.108 64.1104H145.726L145.035 62.246H141.568L140.877 64.1104H139.537ZM141.962 61.1884H144.641L143.302 57.6122H143.28L141.962 61.1884Z" fill="#FD4A9E"></path>
+    <path d="M148.014 64.1104V56.4783H149.29V62.8674H153.119V64.1104H148.014Z" fill="#FD4A9E"></path>
+    <path d="M154.235 64.1104V56.4783H159.031V57.634H155.489V59.7165H157.978V60.8722H155.489V62.9547H159.403V64.1104H154.235Z" fill="#FD4A9E"></path>
+    <path d="M160.57 64.1104V56.4783H161.921L165.972 62.2242V56.4783H167.163V64.1104H165.823L161.793 58.3536V64.1104H160.57Z" fill="#FD4A9E"></path>
+    <path d="M170.969 64.1104V57.7212H168.171V56.4783H175.031V57.7212H172.244V64.1104H170.969Z" fill="#FD4A9E"></path>
+    <path d="M156.358 29.8998C154.631 29.2964 152.667 29.329 150.801 29.1986C138.196 28.2772 125.585 27.478 112.997 26.4344C111.47 26.2564 109.955 25.9841 108.462 25.6189C107.644 25.4232 106.826 25.1949 106.056 24.9829C105.47 24.7647 104.86 24.6142 104.239 24.5345C105.164 23.833 106.17 23.2444 107.235 22.7814C108.446 22.1698 109.69 21.6235 110.967 21.1506C113.496 20.1558 116.098 19.3486 118.693 18.5495C126.272 16.2011 134.023 13.7548 141.609 11.6593C141.921 11.5777 146.463 10.4199 146.422 10.2324C145.244 4.78548 142.215 4.52457 138.778 5.56013C126.28 9.47405 113.807 13.445 101.383 17.5628C98.9409 18.4239 96.6403 19.6413 94.5569 21.1751C91.0212 23.6946 91.2832 26.7523 95.2037 28.5136C97.7173 29.7507 100.414 30.5766 103.192 30.9599C115.771 32.1014 128.383 32.9168 140.971 33.9198C142.731 34.0584 144.458 34.5557 147.052 35.0532C138.721 42.4407 131.428 49.6732 123.317 55.9029C109.289 66.7232 94.5656 76.6631 80.5454 87.4912C72.6141 93.6149 65.2975 100.538 58.087 107.534C54.0683 111.416 54.1419 114.97 57.0065 118.893C61.3116 113.821 65.1909 108.349 70.0035 103.783C76.9078 97.1564 84.1822 90.9223 91.7907 85.1105C105.909 74.3798 120.436 64.171 134.711 53.6361C142.412 47.9283 150.024 42.1553 157.488 36.1621C160.271 33.8708 159.681 31.0414 156.358 29.8998Z" fill="#FD4A9E"></path>
+    <path d="M76.2379 53.0302C83.539 51.4911 90.6516 49.0399 97.8054 46.8412C99.5827 46.2572 101.271 45.4353 102.826 44.3981C105.867 42.4356 105.123 40.3264 102.596 37.8833C92.9169 42.7694 82.9745 46.8412 71.7575 49.0155C75.6734 40.2206 79.2792 32.3866 82.6475 24.4548C85.0022 18.901 87.0711 13.225 89.1884 7.56532C90.3412 4.46265 90.5044 1.56355 86.4171 0C85.7544 0.561899 84.7813 1.00981 84.4139 1.75086C80.5057 9.36503 74.4722 15.497 70.1796 22.9239C64.1377 33.3963 56.2806 42.8021 49.5356 52.8999C47.7777 55.5385 45.8237 56.5563 42.9294 57.3218C30.265 60.6851 17.6986 64.3985 5.06695 67.9083C2.70413 68.5598 -0.0511377 68.9751 0.979022 72.1754C2.00918 75.376 4.57635 74.3907 6.85742 73.5194C7.51147 73.2667 8.13293 72.9087 8.80334 72.7051L41.9647 62.1183L42.7823 63.1281C39.9452 67.2975 37.0591 71.4344 34.2875 75.6366C23.1901 92.3957 12.1228 109.179 1.08541 125.987C-0.279958 128.064 -0.966836 130.319 2.81859 132.103C3.99502 130.534 5.08667 128.902 6.08894 127.217C16.8891 107.312 28.722 87.9807 41.5396 69.3008C43.8533 65.9213 45.3903 61.5239 50.2631 60.4245C53.6725 59.7731 60.5075 57.9814 62.5269 57.8511C61.8238 59.944 61.4396 61.5401 60.7692 62.9977C56.8693 71.4995 52.863 79.9527 48.9713 88.4542C47.8921 90.8155 45.9055 93.2511 49.2984 96.8662C50.8273 94.4234 52.2907 92.4693 53.2718 90.352C57.5477 81.0276 61.8238 71.695 65.8136 62.2486C67.9148 57.387 70.7028 54.2028 76.2379 53.0302ZM52.9612 55.0579L52.7323 55.1068C52.8467 52.11 55.1279 50.1149 56.673 47.7777C60.761 41.5398 64.8489 35.2611 69.1413 29.1129C70.7765 26.7594 72.4936 24.4549 74.2181 22.1584C75.036 21.0427 75.7882 19.8374 76.614 18.7137C76.9865 18.0477 77.4615 17.4433 78.0203 16.9221C80.9879 14.9759 78.7479 20.2936 78.4043 21.1405L75.2403 28.9826C73.131 34.2025 69.4355 43.258 67.3834 48.5268C65.789 52.6474 57.9321 54.3739 52.9939 55.0905L52.9612 55.0579Z" fill="#FD4A9E"></path>
+  </g>
+  <defs>
+    <clipPath id="clip0_18_172">
+      <rect width="231" height="132.103" fill="white"></rect>
+    </clipPath>
+  </defs>
+</svg></span>
+    <div class="sep"></div>
+    <span style="font-size:14px;font-weight:600;">Traffic Analytics</span>
+    <span class="upd" data-utc="2026-06-19T12:00:00Z">June 19, 2026, 12:00 UTC</span>
+  </div>
+  <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" title="Toggle dark/light mode">
+    <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    <span id="themeLabel">Light</span>
+  </button>
+</header>
+<main class="main">
 
-MSGS3 = {
-    "01KW9BHKKESX6F9STJGD5B4NJX": 0,   # Octocuro (YR)
-    "01KX3RM06SKCY288Q50JAWQSG4": 0,   # E.Momota (YR)
-    "01KX14VNRVBHW5KRPVDD7G4K1X": 0,   # E.Momota s1 (TD) — new
-    "01KW9Q2FDB4BCWHMKANRJHQ5J7": 0,   # Emira Momota (OL) — new
-    "01KW9S98BTQQPYC47G4AFXGFEV": 0,   # Octocuro (OL) — new
-    "01KSPXD1G50JJQ6XYRPR1FD5GN": 17, "01KT4EBCJW9Z7T73718FWF1GNS": 8,
-    "01KT736WE764G4R2JMXQEYHHXD": 1,  "01KTXGC29Y0KVDMDWJDYTA5KW7": 1,
-    "01KTBSPQBQVM77HR203WHWXZB7": 7,  "01KTBS3785SXY0E748E84XFQP7": 11,
-    "01KTBQYWGAVZ1EAP0ABZE9V784": 14, "01KTBQV7R1AAMDWY0NEQ7VC9CM": 15,
-    "01KT47TPJJBK10C1WKH36H91X6": 8,
+<!-- Decorative brand elements -->
+<img class="deco deco-cherry" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAANoAAADaCAYAAADAHVzbAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAGNDSURBVHgB7b0JvGR1dSd+fr97b+1v6ff69U7T3dCCBhCwFXBDFCSiZlHHoM5EnUyWGf/JjJn5z8TMZCRONJPEJDMmMYuJSz5ZiaIhiCJqi6yytUArQtN0N03v/fba7/Kbc85vub96jQliL+059zRFvbpVdevWrfv9nXO+ZwMopJBCCimkkEIKKaSQQgoppJBCCimkkEIKKaSQQgoppJBCCimkkEIKKaSQQgoppJBCCimkkEIKKaSQQgoppJBCCimkkEIKKaSQQgoppJBCCimkkEIKKaSQQgoppJBCCimkkEIKKaSQQgoppJBCCimkkEIKKaSQQgoppJBCCimkkEIKKaSQQgoppJBCCimkkEIKKaSQQgoppJBCCimkkEIKKaSQQgoppJBCCimkkEIKKaSQQgoppJBCCimkkEIKKaSQQgoppJBCCimkkEIKKaSQQgoppJBCCimkkEIKKaSQQgoppJBCCimkkEIKKaSQQgoppJBCCimkkEIKKaSQQgoppJBCCimkkEIKKaSQQgoppJBCCimkkEIKKaSQQgoppJBCCimkkEIKKaSQQgoppJBCCimkkEIKKaSQQgoppJBCCimkkEIKKaSQQgoppJBCCimkkEIKKaSQQgoppJBCCimkkEIKKaSQQgoppJBCCimkkEIKKaSQQgoppJBCCimkkEIKKaSQQgoppJBCCimkkEIKKaSQQgoppJBCCimkkEIKKaSQQgoppJBCCimkkEIKKaSQQgoppJBCCimkkEIKKaSQQgoppJBCCimkkEIKKaSQQgoppJBCCimkkEIKKaSQQgoppJBCCimkkEIKKaSQQgr9BF38gDnYJZcuAAAAAElFTkSuQmCC" alt="" aria-hidden="true">
+<img class="deco deco-heart"  src="" alt="" aria-hidden="true">
+
+  <div class="page-h">
+    <h1>Traffic Analytics Dashboard</h1>
+    <p>Smart Links data from OF API (live) &middot; Meta budget — manual entry &middot; Breakdown by contractor</p>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="go('overview',this)"><span class="tab-dot"></span>Overview</button>
+    <button class="tab" onclick="go('analytics',this)"><span class="tab-dot"></span>Model data</button>
+    <button class="tab" onclick="go('fraud',this)"><span class="tab-dot"></span>Fraud Detection</button>
+    <button class="tab" onclick="go('analysis',this)"><span class="tab-dot"></span>Analysis</button>
+    <button class="tab" onclick="go('budget',this)"><span class="tab-dot"></span>Meta Budget</button>
+  </div>
+  <!-- OVERVIEW -->
+  <div id="t-overview" class="tab-c active">
+    <div class="kpi-row" id="kpiRow"></div>
+    <div class="con" id="conblk-yr">
+      <div class="con-hdr">
+        <span class="cbadge cbd-yr">YR</span>
+        <span class="con-n" id="name-yr" contenteditable spellcheck="false" onblur="saveName('yr')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}">Yuriy</span>
+        <span class="con-meta">2 models &middot; Smart Links OF API</span>
+        <button class="con-collapse-btn" id="concollapse-yr" onclick="toggleConCollapse('YR')" title="Свернуть/развернуть">▼</button>
+        <button class="con-lock-btn" id="conlock-yr" onclick="toggleConLock('YR')" title="Закрепить / разрешить перемещение">🔓</button>
+      </div>
+      <div class="card">
+        <div class="tbl-wrap"><table class="tbl"><thead><tr id="th-yr"></tr></thead><tbody id="yrBody"></tbody></table></div>
+      </div>
+    </div>
+    <div class="con" id="conblk-td">
+      <div class="con-hdr">
+        <span class="cbadge cbd-td">TD</span>
+        <span class="con-n" id="name-td" contenteditable spellcheck="false" onblur="saveName('td')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}">Traffic Devils</span>
+        <span class="con-meta">4 models &middot; Smart Links OF API</span>
+        <button class="con-collapse-btn" id="concollapse-td" onclick="toggleConCollapse('TD')" title="Свернуть/развернуть">▼</button>
+        <button class="con-lock-btn" id="conlock-td" onclick="toggleConLock('TD')" title="Закрепить / разрешить перемещение">🔓</button>
+      </div>
+      <div class="card">
+        <div class="tbl-wrap"><table class="tbl"><thead><tr id="th-td"></tr></thead><tbody id="tdBody"></tbody></table></div>
+      </div>
+    </div>
+    <div class="con" id="conblk-vl">
+      <div class="con-hdr">
+        <span class="cbadge cbd-vl">VL</span>
+        <span class="con-n" id="name-vl" contenteditable spellcheck="false" onblur="saveName('vl')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}">Vasyl Lev</span>
+        <span class="con-meta">5 models &middot; Smart Links OF API</span>
+        <button class="con-collapse-btn" id="concollapse-vl" onclick="toggleConCollapse('VL')" title="Свернуть/развернуть">▼</button>
+        <button class="con-lock-btn" id="conlock-vl" onclick="toggleConLock('VL')" title="Закрепить / разрешить перемещение">🔓</button>
+      </div>
+      <div class="card">
+        <div class="tbl-wrap"><table class="tbl"><thead><tr id="th-vl"></tr></thead><tbody id="vlBody"></tbody></table></div>
+      </div>
+    </div>
+    <div class="con" id="conblk-ol">
+      <div class="con-hdr">
+        <span class="cbadge cbd-ol">OL</span>
+        <span class="con-n" id="name-ol" contenteditable spellcheck="false" onblur="saveName('ol')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}">Ocean Lead</span>
+        <span class="con-meta">2 models &middot; Smart Links OF API</span>
+        <button class="con-collapse-btn" id="concollapse-ol" onclick="toggleConCollapse('OL')" title="Свернуть/развернуть">▼</button>
+        <button class="con-lock-btn" id="conlock-ol" onclick="toggleConLock('OL')" title="Закрепить / разрешить перемещение">🔓</button>
+      </div>
+      <div class="card">
+        <div class="tbl-wrap"><table class="tbl"><thead><tr id="th-ol"></tr></thead><tbody id="olBody"></tbody></table></div>
+      </div>
+    </div>
+    <p class="note">&#x26A1; Data pulled directly from OF API. CPC &middot; CPF &middot; ROAS are calculated using the Meta Spend you enter manually.</p>
+    <div style="display:flex;gap:8px;align-items:center;margin-top:6px;">
+      <span class="sbadge sm">Meta Ads</span>
+      <span class="sbadge so">OnlyFans Smart Links</span>
+    </div>
+  </div>
+  <!-- ANALYTICS -->
+  <div id="t-analytics" class="tab-c">
+    <div class="kpi-row" style="margin-bottom:16px;">
+      <div class="kpi"><div class="kpi-l">Clicks</div><div class="kpi-v" id="an-cl">—</div><div class="kpi-s">9 Smart Links</div></div>
+      <div class="kpi"><div class="kpi-l">Subscriptions</div><div class="kpi-v" id="an-su">—</div><div class="kpi-s">all links</div></div>
+      <div class="kpi"><div class="kpi-l">Avg CR%</div><div class="kpi-v" id="an-cr">—</div><div class="kpi-s">portfolio average</div></div>
+      <div class="kpi"><div class="kpi-l">3F+ msg</div><div class="kpi-v" id="an-ms" style="color:#6941c6">—</div><div class="kpi-s">engaged fans</div></div>
+    </div>
+    <div style="margin-bottom:4px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:8px 14px;background:var(--white);border:1px solid var(--border);border-radius:var(--rmd);">
+        <span class="cbadge cbd-yr">YR</span><span id="anYRlbl" style="font-size:12px;color:var(--t2);">Yuriy</span>
+        <span style="font-size:11px;color:var(--t3);margin-left:8px;">Click a model for detailed geo &amp; device breakdown</span>
+      </div>
+      <div class="mc-grid" id="mcYR"></div>
+    </div>
+    <div style="margin-bottom:4px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:8px 14px;background:var(--white);border:1px solid var(--border);border-radius:var(--rmd);">
+        <span class="cbadge cbd-td">TD</span><span id="anTDlbl" style="font-size:12px;color:var(--t2);">Traffic Devils</span>
+        <span style="font-size:11px;color:var(--t3);margin-left:8px;">Click a model for detailed geo &amp; device breakdown</span>
+      </div>
+      <div class="mc-grid" id="mcTD"></div>
+    </div>
+    <div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:8px 14px;background:var(--white);border:1px solid var(--border);border-radius:var(--rmd);">
+        <span class="cbadge cbd-vl">VL</span><span id="anVLlbl" style="font-size:12px;color:var(--t2);">Vasyl Lev</span>
+      </div>
+      <div class="kpi-row" id="mcOL"></div>
+      <div style="display:flex;align-items:center;gap:8px;margin:16px 0 8px;">
+        <span class="cbadge cbd-ol">OL</span><span id="anOLlbl" style="font-size:12px;color:var(--t2);">Ocean Lead</span
+        <span style="font-size:11px;color:var(--t3);margin-left:8px;">Click a model for detailed geo &amp; device breakdown</span>
+      </div>
+      <div class="mc-grid" id="mcVL"></div>
+    </div>
+  </div>
+  <!-- CHARTS -->
+  <!-- FRAUD -->
+  <div id="t-fraud" class="tab-c">
+    <div class="fr-kpi-grid" id="fraudKPIs"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px;">
+      <div class="card"><div class="card-hdr"><div class="card-t" id="fr-title-yr">Yuriy &middot; Fraud by model</div><span class="cbadge cbd-yr">YR</span></div><div style="padding:14px;" id="fraudBarsYR"></div></div>
+      <div class="card"><div class="card-hdr"><div class="card-t" id="fr-title-td">Traffic Devils &middot; Fraud by model</div><span class="cbadge cbd-td">TD</span></div><div style="padding:14px;" id="fraudBarsTD"></div></div>
+      <div class="card"><div class="card-hdr"><div class="card-t" id="fr-title-vl">Vasyl Lev &middot; Fraud by model</div><span class="cbadge cbd-vl">VL</span></div><div style="padding:14px;" id="fraudBarsVL"></div></div>
+      <div class="card"><div class="card-hdr"><div class="card-t" id="fr-title-ol">Ocean Lead &middot; Fraud by model</div><span class="cbadge cbd-ol">OL</span></div><div style="padding:14px;" id="fraudBarsOL"></div></div>
+    </div>
+    <div class="card" style="margin-bottom:14px;">
+      <div class="card-hdr"><div class="card-t">Bot types by contractor</div></div>
+      <div style="padding:14px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;" id="fraudBotTypes"></div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><div><div class="card-t">Click Log &middot; Fraud Detection</div><div class="card-s">listSmartLinkClicks &middot; live, last 30 days &middot; most recent 250 rows</div></div><span id="fraudCount" style="font-size:12px;color:var(--t2);"></span></div>
+      <div class="fr-filter-row">
+        <span class="lbl">Contractor:</span>
+        <button class="fr-btn active" data-ftype="con" data-fval="all" onclick="setFF(this)">All</button>
+        <button class="fr-btn" data-ftype="con" data-fval="YR" onclick="setFF(this)">YR</button>
+        <button class="fr-btn" data-ftype="con" data-fval="TD" onclick="setFF(this)">TD</button>
+        <button class="fr-btn" data-ftype="con" data-fval="VL" onclick="setFF(this)">VL</button>
+        <span class="lbl" style="margin-left:8px;">Model:</span>
+        <button class="fr-btn active" data-ftype="model" data-fval="all" onclick="setFF(this)">All</button>
+        <button class="fr-btn" data-ftype="model" data-fval="Octocuro" onclick="setFF(this)">Octocuro</button>
+        <button class="fr-btn" data-ftype="model" data-fval="Octokura" onclick="setFF(this)">Octokura</button>
+        <button class="fr-btn" data-ftype="model" data-fval="Nancy Ace" onclick="setFF(this)">Nancy Ace</button>
+        <button class="fr-btn" data-ftype="model" data-fval="Ellie Bird" onclick="setFF(this)">Ellie Bird</button>
+        <button class="fr-btn" data-ftype="model" data-fval="Chloe Temple" onclick="setFF(this)">Chloe</button>
+        <button class="fr-btn" data-ftype="model" data-fval="Jennifer White" onclick="setFF(this)">Jennifer</button>
+        <button class="fr-btn" data-ftype="model" data-fval="Amanda Essen" onclick="setFF(this)">Amanda</button>
+        <button class="fr-btn" data-ftype="model" data-fval="Emiri Momota" onclick="setFF(this)">Emiri</button>
+        <span class="lbl" style="margin-left:8px;">Status:</span>
+        <button class="fr-btn f-ok active" data-ftype="status" data-fval="all" onclick="setFF(this)">All</button>
+        <button class="fr-btn f-ok" data-ftype="status" data-fval="ok" onclick="setFF(this)">&#x2713; Ok</button>
+        <button class="fr-btn f-bot" data-ftype="status" data-fval="bot" onclick="setFF(this)">&#x26A0; Bot</button>
+        <span class="lbl" style="margin-left:8px;">Device:</span>
+        <button class="fr-btn active" data-ftype="device" data-fval="all" onclick="setFF(this)">All</button>
+        <button class="fr-btn" data-ftype="device" data-fval="Mobile" onclick="setFF(this)">&#x1F4F1; Mobile</button>
+        <button class="fr-btn" data-ftype="device" data-fval="Desktop" onclick="setFF(this)">&#x1F4BB; Desktop</button>
+        <button class="fr-btn f-bot" data-ftype="device" data-fval="Bot" onclick="setFF(this)">&#x1F916; Bot</button>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="fr-tbl"><thead><tr><th>Time</th><th>Contractor</th><th>Model</th><th>IP Address</th><th>User Agent</th><th>Click ID</th><th>Country</th><th>Device</th><th style="text-align:center;">Clicks</th><th>Fraud</th></tr></thead><tbody id="fraudTbody"></tbody></table>
+      </div>
+      <div style="padding:10px 16px;border-top:1px solid var(--bl);display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-size:12px;color:var(--t3);" id="fraudPag"></span>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-g" style="padding:4px 12px;font-size:12px;" onclick="fraudChangePage(-1)">&#x2190; Previous</button>
+          <button class="btn btn-g" style="padding:4px 12px;font-size:12px;" onclick="fraudChangePage(1)">Next &#x2192;</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ANALYSIS -->
+  <div id="t-analysis" class="tab-c">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;padding:10px 14px;background:var(--white);border:1px solid var(--border);border-radius:var(--rmd);box-shadow:var(--sh);">
+      <span style="font-size:11px;color:var(--t3);font-weight:600;">Contractor:</span>
+      <button class="scope-btn active" data-congroup data-scope="all" onclick="setAnalysisCon('all',this)">All</button>
+      <button class="scope-btn" data-congroup data-scope="YR" id="sc-yr" onclick="setAnalysisCon('YR',this)">Yuriy</button>
+      <button class="scope-btn" data-congroup data-scope="TD" id="sc-td" onclick="setAnalysisCon('TD',this)">Traffic Devils</button>
+      <button class="scope-btn" data-congroup data-scope="VL" id="sc-vl" onclick="setAnalysisCon('VL',this)">Vasyl Lev</button>
+      <button class="scope-btn" data-congroup data-scope="OL" id="sc-ol" onclick="setAnalysisCon('OL',this)">Ocean Lead</button>
+      <span id="anModelLabel" style="font-size:11px;color:var(--t3);font-weight:600;margin-left:4px;"></span>
+      <span id="analysisModelBtns" style="display:inline-flex;gap:6px;flex-wrap:wrap;"></span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap;padding:10px 14px;background:var(--white);border:1px solid var(--border);border-radius:var(--rmd);box-shadow:var(--sh);">
+      <span style="font-size:11px;color:var(--t3);font-weight:600;">Period:</span>
+      <input type="date" class="range-inp" id="anFrom" onchange="renderAnalysis()">
+      <span style="color:var(--t3);font-size:12px;">&ndash;</span>
+      <input type="date" class="range-inp" id="anTo" onchange="renderAnalysis()">
+      <button class="btn btn-g" style="font-size:11px;padding:5px 10px;" onclick="document.getElementById('anFrom').value='';document.getElementById('anTo').value='';renderAnalysis();">Full period</button>
+      <span style="font-size:11px;color:var(--t3);font-weight:600;margin-left:4px;">Target CPF $</span>
+      <input type="number" class="range-inp" id="anTarget" value="1.50" step="0.01" style="width:64px;" onchange="saveAnTarget();renderAnalysis()">
+      <button class="btn btn-g" style="font-size:11px;padding:5px 10px;margin-left:auto;" onclick="window.print()">&#x1F5A8; Print report</button>
+    </div>
+    <div class="kpi-row" id="anKPIs" style="margin-bottom:16px;"></div>
+    <div id="anContent"></div>
+  </div>
+  <!-- BUDGET -->
+  <div id="t-budget" class="tab-c">
+    <div class="kpi-row" style="margin-bottom:16px;">
+      <div class="kpi"><div class="kpi-l">Total Budget &middot; All</div><div class="kpi-v" id="bgTotalAll">$0.00</div><div class="kpi-s">Yuriy + Traffic Devils + Vasyl Lev</div></div>
+      <div class="kpi"><div class="kpi-l" id="bg-lbl-yr">Yuriy</div><div class="kpi-v" id="bgTotalYR">$0.00</div><div class="kpi-s">1 model</div></div>
+      <div class="kpi"><div class="kpi-l" id="bg-lbl-td">Traffic Devils</div><div class="kpi-v" id="bgTotalTD">$0.00</div><div class="kpi-s">5 models</div></div>
+      <div class="kpi"><div class="kpi-l" id="bg-lbl-vl">Vasyl Lev</div><div class="kpi-v" id="bgTotalVL">$0.00</div><div class="kpi-s">5 models</div></div>
+      <div class="kpi"><div class="kpi-l" id="bg-lbl-ol">Ocean Lead</div><div class="kpi-v" id="bgTotalOL">$0.00</div><div class="kpi-s">2 models</div></div>
+    </div>
+    <div class="card">
+      <div class="card-hdr">
+        <div><div class="card-t">Meta Ads Budget — manual entry</div><div class="card-s">Enter values from Meta Ads Manager. Saved in your browser.</div></div>
+        <div style="display:flex;gap:8px;"><button class="btn btn-g" onclick="resetBudget()">Reset</button><button class="btn btn-p" onclick="saveBudget()">Save</button></div>
+      </div>
+      <div style="padding:16px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;"><span class="cbadge cbd-yr">YR</span><span class="sec-lbl" style="margin:0;" id="bl-yr">Yuriy — Spend ($)</span><span style="margin-left:auto;font-size:12px;font-weight:700;color:var(--t2);" id="bgSubYR">$0.00</span></div>
+        <div class="bg-grid" id="bgYR"></div>
+        <div class="divider"></div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;"><span class="cbadge cbd-td">TD</span><span class="sec-lbl" style="margin:0;" id="bl-td">Traffic Devils — Spend ($)</span><span style="margin-left:auto;font-size:12px;font-weight:700;color:var(--t2);" id="bgSubTD">$0.00</span></div>
+        <div class="bg-grid" id="bgTD"></div>
+        <div class="divider"></div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;"><span class="cbadge cbd-vl">VL</span><span class="sec-lbl" style="margin:0;" id="bl-vl">Vasyl Lev — Spend ($)</span><span style="margin-left:auto;font-size:12px;font-weight:700;color:var(--t2);" id="bgSubVL">$0.00</span></div>
+        <div id="bgVL"></div>
+      </div>
+      <div class="card" style="margin-top:12px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;"><span class="cbadge cbd-ol">OL</span><span class="sec-lbl" style="margin:0;" id="bl-ol">Ocean Lead — Spend ($)</span><span style="margin-left:auto;font-size:12px;font-weight:700;color:var(--t2);" id="bgSubOL">$0.00</span></div>
+        <div id="bgOL"></div>
+        <div class="bg-grid" id="bgVL"></div>
+        <div class="info-box"><strong>How to update:</strong> Open Meta Ads Manager &#x2192; copy the Spend for the period &#x2192; paste it here &#x2192; click "Save".</div>
+      </div>
+    </div>
+  </div>
+</main>
+<!-- MODEL PANEL -->
+<div class="pov" id="pov" onclick="if(event.target===this)closePanel()">
+  <div class="panel">
+    <div class="p-hdr">
+      <div><div class="p-title" id="pTitle">Analytics</div><div style="font-size:11px;color:var(--t2);margin-top:2px;" id="pSub"></div></div>
+      <button class="p-close" onclick="closePanel()">&#x2715;</button>
+    </div>
+    <div class="p-body" id="pBody"></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+var LINKS = {
+  YR: [
+    {id:'01KW9BHKKESX6F9STJGD5B4NJX',startDate:'2026-07-02',model:'Octocuro',color:'#7c3aed',clicks:0,subs:0,spenders:0,revenue:0,msgs3:0,offer:'Free Trial',geo:[],devs:[],daily:[]},
+    {id:'01KX3RM06SKCY288Q50JAWQSG4',startDate:'2026-07-08',model:'E.Momota',color:'#e879a9',clicks:0,subs:0,spenders:0,revenue:0,msgs3:0,offer:'Free Trial',geo:[],devs:[],daily:[]}
+  ],
+  TD: [
+    {id:'01KSPXD1G50JJQ6XYRPR1FD5GN',startDate:'2026-05-29',model:'Octokura',color:'#0ea5e9',clicks:2065,subs:557,spenders:3,revenue:35.76,msgs3:17,offer:'Free Trial',geo:[{c: "US", n: 39, s: 42.9}, {c: "GB", n: 16, s: 17.6}, {c: "AU", n: 15, s: 16.5}, {c: "FR", n: 9, s: 9.9}, {c: "CA", n: 6, s: 6.6}, {c: "Other", n: 6, s: 6.6}],devs:[{d: "Mobile", n: 62, s: 68.1, cl: "#1570ef"}, {d: "Bot", n: 28, s: 30.8, cl: "#f04438"}, {d: "Desktop", n: 1, s: 1.1, cl: "#10b981"}],daily:[{d:"2026-05-29",c:12,s:0,sp:0,r:0},{d:"2026-05-31",c:1,s:0,sp:0,r:0},{d:"2026-06-01",c:693,s:87,sp:0,r:0},{d:"2026-06-02",c:891,s:182,sp:1,r:11.92},{d:"2026-06-03",c:346,s:46,sp:0,r:0},{d:"2026-06-04",c:530,s:57,sp:0,r:0},{d:"2026-06-05",c:582,s:58,sp:2,r:23.84},{d:"2026-06-06",c:1745,s:110,sp:0,r:0},{d:"2026-06-07",c:199,s:17,sp:0,r:0},{d:"2026-06-08",c:3,s:0,sp:0,r:0},{d:"2026-06-09",c:6,s:0,sp:0,r:0},{d:"2026-06-10",c:9,s:0,sp:0,r:0},{d:"2026-06-11",c:5,s:0,sp:0,r:0},{d:"2026-06-12",c:1,s:0,sp:0,r:0},{d:"2026-06-13",c:1,s:0,sp:0,r:0},{d:"2026-06-14",c:1,s:0,sp:0,r:0},{d:"2026-06-15",c:3,s:0,sp:0,r:0},{d:"2026-06-16",c:1,s:0,sp:0,r:0},{d:"2026-06-17",c:2,s:0,sp:0,r:0},{d:"2026-06-18",c:1,s:0,sp:0,r:0},{d:"2026-06-19",c:4,s:0,sp:0,r:0},{d:"2026-06-20",c:5,s:0,sp:0,r:0},{d:"2026-06-21",c:1,s:0,sp:0,r:0}]},
+    {id:'01KT4EBCJW9Z7T73718FWF1GNS',startDate:'2026-06-02',model:'Nancy Ace',color:'#f59e0b',clicks:1751,subs:448,spenders:1,revenue:15.99,msgs3:8,offer:'Free Trial',geo:[{c: "US", n: 28, s: 40.6}, {c: "GB", n: 15, s: 21.7}, {c: "CA", n: 12, s: 17.4}, {c: "AU", n: 8, s: 11.6}, {c: "Other", n: 6, s: 8.7}],devs:[{d: "Mobile", n: 52, s: 75.4, cl: "#1570ef"}, {d: "Bot", n: 15, s: 21.7, cl: "#f04438"}, {d: "Desktop", n: 2, s: 2.9, cl: "#10b981"}],daily:[{d:"2026-06-02",c:2,s:0,sp:0,r:0},{d:"2026-06-03",c:46,s:0,sp:0,r:0},{d:"2026-06-04",c:44,s:0,sp:0,r:0},{d:"2026-06-05",c:572,s:63,sp:0,r:0},{d:"2026-06-06",c:9,s:5,sp:0,r:0},{d:"2026-06-09",c:2,s:1,sp:0,r:0},{d:"2026-06-10",c:1,s:0,sp:0,r:0},{d:"2026-06-14",c:476,s:91,sp:0,r:0},{d:"2026-06-15",c:137,s:15,sp:0,r:0},{d:"2026-06-16",c:311,s:39,sp:1,r:15.99},{d:"2026-06-17",c:788,s:234,sp:0,r:0},{d:"2026-06-18",c:3,s:0,sp:0,r:0},{d:"2026-06-19",c:1,s:0,sp:0,r:0},{d:"2026-06-21",c:1,s:0,sp:0,r:0}]},
+    {id:'01KT736WE764G4R2JMXQEYHHXD',startDate:'2026-06-03',model:'Ellie Bird',color:'#8b5cf6',clicks:1305,subs:54,spenders:0,revenue:0,msgs3:1,offer:'Free Trial',geo:[{c: "US", n: 22, s: 37.3}, {c: "GB", n: 14, s: 23.7}, {c: "CA", n: 10, s: 16.9}, {c: "AU", n: 7, s: 11.9}, {c: "Other", n: 6, s: 10.2}],devs:[{d: "Mobile", n: 34, s: 68.0, cl: "#1570ef"}, {d: "Bot", n: 16, s: 32.0, cl: "#f04438"}],daily:[{d:"2026-06-03",c:2,s:0,sp:0,r:0},{d:"2026-06-04",c:330,s:6,sp:0,r:0},{d:"2026-06-05",c:300,s:3,sp:0,r:0},{d:"2026-06-06",c:188,s:9,sp:0,r:0},{d:"2026-06-07",c:1,s:0,sp:0,r:0},{d:"2026-06-10",c:1,s:0,sp:0,r:0},{d:"2026-06-12",c:15,s:0,sp:0,r:0},{d:"2026-06-14",c:143,s:35,sp:0,r:0},{d:"2026-06-15",c:619,s:0,sp:0,r:0},{d:"2026-06-16",c:82,s:1,sp:0,r:0},{d:"2026-06-17",c:3,s:0,sp:0,r:0},{d:"2026-06-18",c:1,s:0,sp:0,r:0},{d:"2026-06-19",c:1,s:0,sp:0,r:0},{d:"2026-06-20",c:2,s:0,sp:0,r:0}]},
+    {id:'01KTXGC29Y0KVDMDWJDYTA5KW7',startDate:'2026-06-12',model:'Emiri Momota',color:'#14b8a6',clicks:1208,subs:504,spenders:2,revenue:234.38,msgs3:1,offer:'Free Trial',geo:[{c: "US", n: 40, s: 64.5}, {c: "UA", n: 1, s: 1.6}, {c: "PL", n: 1, s: 1.6}, {c: "Other", n: 20, s: 32.3}],devs:[{d: "Mobile", n: 2, s: 66.7, cl: "#1570ef"}, {d: "Desktop", n: 1, s: 33.3, cl: "#10b981"}],daily:[{d:"2026-06-12",c:14,s:1,sp:0,r:0},{d:"2026-06-13",c:201,s:22,sp:0,r:0},{d:"2026-06-14",c:165,s:67,sp:0,r:0},{d:"2026-06-15",c:188,s:48,sp:0,r:0},{d:"2026-06-16",c:372,s:98,sp:1,r:214.38},{d:"2026-06-17",c:603,s:268,sp:0,r:0},{d:"2026-06-18",c:1,s:0,sp:0,r:0},{d:"2026-06-19",c:1,s:0,sp:1,r:20.00},{d:"2026-06-21",c:1,s:0,sp:0,r:0}]},
+    {id:'01KVSVDP1HEK77R67350QFA4GS',startDate:'2026-06-23',model:'Emiri Momota',color:'#65a30d',clicks:6,subs:1,spenders:1,revenue:2.40,msgs3:0,offer:'Tracking Link',geo:[],devs:[],daily:[{d:"2026-06-23",c:7,s:0,sp:0,r:0},{d:"2026-06-24",c:1,s:1,sp:1,r:2.40}]},
+    {id:'01KX14VNRVBHW5KRPVDD7G4K1X',startDate:'2026-07-09',model:'E.Momota s1',color:'#f43f5e',clicks:0,subs:0,spenders:0,revenue:0,msgs3:0,offer:'Free Trial',geo:[],devs:[],daily:[]}
+  ],
+  OL: [
+    {id:'01KW9Q2FDB4BCWHMKANRJHQ5J7',startDate:'2026-07-02',model:'E.Momota',color:'#e879a9',clicks:0,subs:0,spenders:0,revenue:0,msgs3:0,offer:'Free Trial',geo:[],devs:[],daily:[]},
+    {id:'01KW9S98BTQQPYC47G4AFXGFEV',startDate:'2026-07-02',model:'Octocuro',color:'#0891b2',clicks:0,subs:0,spenders:0,revenue:0,msgs3:0,offer:'Free Trial',geo:[],devs:[],daily:[]}
+  ],
+  VL: [
+    {id:'01KTBSPQBQVM77HR203WHWXZB7',startDate:'2026-06-05',model:'Chloe Temple',color:'#ec4899',clicks:2454,subs:190,spenders:0,revenue:0,msgs3:7,offer:'Free Trial',geo:[{c: "US", n: 609, s: 52.5}, {c: "GB", n: 321, s: 27.6}, {c: "CA", n: 215, s: 18.5}, {c: "NL", n: 3, s: 0.3}, {c: "Other", n: 6, s: 0.5}],devs:[{d: "Mobile", n: 1466, s: 100, cl: "#1570ef"}],daily:[{d:"2026-06-05",c:38,s:4,sp:0,r:0},{d:"2026-06-06",c:156,s:13,sp:0,r:0},{d:"2026-06-07",c:397,s:30,sp:0,r:0},{d:"2026-06-08",c:246,s:24,sp:0,r:0},{d:"2026-06-09",c:114,s:8,sp:0,r:0},{d:"2026-06-10",c:6,s:0,sp:0,r:0},{d:"2026-06-11",c:122,s:5,sp:0,r:0},{d:"2026-06-12",c:276,s:23,sp:0,r:0},{d:"2026-06-13",c:226,s:15,sp:0,r:0},{d:"2026-06-14",c:403,s:24,sp:0,r:0},{d:"2026-06-15",c:155,s:6,sp:0,r:0},{d:"2026-06-16",c:64,s:7,sp:0,r:0},{d:"2026-06-17",c:154,s:17,sp:0,r:0},{d:"2026-06-18",c:122,s:8,sp:0,r:0},{d:"2026-06-19",c:47,s:7,sp:0,r:0},{d:"2026-06-20",c:58,s:17,sp:0,r:0}]},
+    {id:'01KTBS3785SXY0E748E84XFQP7',startDate:'2026-06-05',model:'Jennifer White',color:'#f97316',clicks:3236,subs:277,spenders:5,revenue:164.84,msgs3:11,offer:'Free Trial',geo:[{c: "US", n: 52, s: 38.2}, {c: "GB", n: 42, s: 30.9}, {c: "CA", n: 28, s: 20.6}, {c: "AU", n: 12, s: 8.8}, {c: "Other", n: 6, s: 1.5}],devs:[{d: "Mobile", n: 1800, s: 80.2, cl: "#1570ef"}, {d: "Bot", n: 400, s: 17.8, cl: "#f04438"}, {d: "Desktop", n: 44, s: 2.0, cl: "#10b981"}],daily:[{d:"2026-06-05",c:80,s:7,sp:0,r:0},{d:"2026-06-06",c:306,s:27,sp:0,r:0},{d:"2026-06-07",c:435,s:15,sp:1,r:15.99},{d:"2026-06-08",c:251,s:13,sp:1,r:15.99},{d:"2026-06-09",c:152,s:11,sp:0,r:0},{d:"2026-06-10",c:50,s:4,sp:0,r:0},{d:"2026-06-11",c:37,s:3,sp:0,r:0},{d:"2026-06-12",c:250,s:21,sp:1,r:27.55},{d:"2026-06-13",c:772,s:59,sp:1,r:23.99},{d:"2026-06-14",c:244,s:25,sp:1,r:26.66},{d:"2026-06-15",c:149,s:14,sp:0,r:0},{d:"2026-06-16",c:135,s:28,sp:1,r:26.66},{d:"2026-06-17",c:282,s:34,sp:1,r:23.99},{d:"2026-06-18",c:119,s:13,sp:0,r:0},{d:"2026-06-19",c:43,s:3,sp:1,r:20.00},{d:"2026-06-20",c:64,s:15,sp:1,r:7.99}]},
+    {id:'01KTBQYWGAVZ1EAP0ABZE9V784',startDate:'2026-06-05',model:'Amanda Essen',color:'#10b981',clicks:2970,subs:417,spenders:1,revenue:88.79,msgs3:14,offer:'Free Trial',geo:[{c: "US", n: 88, s: 50.3}, {c: "GB", n: 42, s: 24.0}, {c: "CA", n: 28, s: 16.0}, {c: "AU", n: 12, s: 6.9}, {c: "Other", n: 5, s: 2.9}],devs:[{d: "Mobile", n: 148, s: 79.6, cl: "#1570ef"}, {d: "Bot", n: 32, s: 17.2, cl: "#f04438"}, {d: "Desktop", n: 6, s: 3.2, cl: "#10b981"}],daily:[{d:"2026-06-05",c:19,s:1,sp:0,r:0},{d:"2026-06-06",c:200,s:16,sp:0,r:0},{d:"2026-06-07",c:504,s:49,sp:0,r:0},{d:"2026-06-08",c:203,s:36,sp:0,r:0},{d:"2026-06-09",c:54,s:1,sp:0,r:0},{d:"2026-06-10",c:532,s:84,sp:0,r:0},{d:"2026-06-11",c:119,s:20,sp:0,r:0},{d:"2026-06-12",c:112,s:8,sp:0,r:0},{d:"2026-06-13",c:517,s:78,sp:0,r:0},{d:"2026-06-14",c:304,s:54,sp:0,r:0},{d:"2026-06-15",c:368,s:57,sp:0,r:0},{d:"2026-06-16",c:50,s:6,sp:0,r:0},{d:"2026-06-17",c:67,s:8,sp:1,r:88.79},{d:"2026-06-21",c:4,s:0,sp:0,r:0}]},
+    {id:'01KTBQV7R1AAMDWY0NEQ7VC9CM',startDate:'2026-06-05',model:'Ellie Bird',color:'#8b5cf6',clicks:4165,subs:268,spenders:0,revenue:0,msgs3:15,offer:'Free Trial',geo:[{c: "US", n: 88, s: 50.3}, {c: "GB", n: 42, s: 24.0}, {c: "CA", n: 28, s: 16.0}, {c: "AU", n: 12, s: 6.9}, {c: "Other", n: 5, s: 2.9}],devs:[{d: "Mobile", n: 136, s: 77.7, cl: "#1570ef"}, {d: "Bot", n: 35, s: 20.0, cl: "#f04438"}, {d: "Desktop", n: 4, s: 2.3, cl: "#10b981"}],daily:[{d:"2026-06-05",c:15,s:0,sp:0,r:0},{d:"2026-06-06",c:138,s:14,sp:0,r:0},{d:"2026-06-07",c:894,s:73,sp:0,r:0},{d:"2026-06-08",c:433,s:17,sp:0,r:0},{d:"2026-06-09",c:432,s:30,sp:0,r:0},{d:"2026-06-10",c:451,s:26,sp:0,r:0},{d:"2026-06-11",c:475,s:25,sp:0,r:0},{d:"2026-06-12",c:406,s:26,sp:0,r:0},{d:"2026-06-13",c:724,s:40,sp:0,r:0},{d:"2026-06-14",c:382,s:16,sp:0,r:0},{d:"2026-06-15",c:6,s:0,sp:0,r:0},{d:"2026-06-16",c:2,s:0,sp:0,r:0},{d:"2026-06-17",c:1,s:0,sp:0,r:0},{d:"2026-06-18",c:9,s:1,sp:0,r:0},{d:"2026-06-21",c:1,s:0,sp:0,r:0}]},
+    {id:'01KT47TPJJBK10C1WKH36H91X6',startDate:'2026-06-03',model:'Nancy Ace',color:'#f59e0b',clicks:3897,subs:308,spenders:0,revenue:0,msgs3:8,offer:'Free Trial',geo:[{c: "US", n: 30, s: 41.7}, {c: "GB", n: 18, s: 25.0}, {c: "CA", n: 14, s: 19.4}, {c: "AU", n: 6, s: 8.3}, {c: "Other", n: 4, s: 5.6}],devs:[{d: "Mobile", n: 57, s: 79.2, cl: "#1570ef"}, {d: "Bot", n: 13, s: 18.1, cl: "#f04438"}, {d: "Desktop", n: 2, s: 2.8, cl: "#10b981"}],daily:[{d:"2026-06-03",c:1,s:0,sp:0,r:0},{d:"2026-06-05",c:34,s:0,sp:0,r:0},{d:"2026-06-06",c:309,s:17,sp:0,r:0},{d:"2026-06-07",c:400,s:27,sp:0,r:0},{d:"2026-06-08",c:270,s:14,sp:0,r:0},{d:"2026-06-09",c:158,s:10,sp:0,r:0},{d:"2026-06-10",c:20,s:0,sp:0,r:0},{d:"2026-06-11",c:78,s:9,sp:0,r:0},{d:"2026-06-12",c:548,s:25,sp:0,r:0},{d:"2026-06-13",c:1148,s:138,sp:0,r:0},{d:"2026-06-14",c:393,s:28,sp:0,r:0},{d:"2026-06-15",c:344,s:20,sp:0,r:0},{d:"2026-06-16",c:224,s:12,sp:0,r:0},{d:"2026-06-17",c:8,s:0,sp:0,r:0},{d:"2026-06-18",c:103,s:3,sp:0,r:0},{d:"2026-06-19",c:193,s:5,sp:0,r:0},{d:"2026-06-20",c:238,s:9,sp:0,r:0},{d:"2026-06-21",c:7,s:0,sp:0,r:0}]}
+  ]
+};
+var ALL = LINKS.YR.concat(LINKS.TD).concat(LINKS.VL).concat(LINKS.OL);
+
+var FSTATS=[]; // populated live by update.py on each scheduled GitHub Action run (last 30 days, via listSmartLinkClicks)
+var FCLICKS=[]; // populated live by update.py on each scheduled GitHub Action run (most recent 250 rows, last 30 days)
+
+var spend={}, statuses={}, names={yr:'Yuriy',td:'Traffic Devils',vl:'Vasyl Lev',ol:'Ocean Lead'};
+var fFilters={con:'all',model:'all',status:'all',device:'all'}, fPage=0, fFiltered=[], F_PER_PG=25;
+var anScope='all', anConCtx=null, anTarget=1.50;
+try{var _at=localStorage.getItem('tm_antarget');if(_at)anTarget=parseFloat(_at)||1.50;}catch(e){}
+var offerTypes={};
+ALL.forEach(function(l){spend[l.id]=0;statuses[l.id]=(l.id==='01KVSVDP1HEK77R67350QFA4GS'||l.id==='01KW9BHKKESX6F9STJGD5B4NJX'||l.id==='01KX3RM06SKCY288Q50JAWQSG4'||l.id==='01KX14VNRVBHW5KRPVDD7G4K1X'||l.id==='01KW9Q2FDB4BCWHMKANRJHQ5J7'||l.id==='01KW9S98BTQQPYC47G4AFXGFEV')?'test':'active';offerTypes[l.id]=l.offer||'Free Trial';});
+
+function loadLS(){try{var s=localStorage.getItem('tm_spend');if(s)Object.assign(spend,JSON.parse(s));}catch(e){}try{var t=localStorage.getItem('tm_status');if(t)Object.assign(statuses,JSON.parse(t));}catch(e){}try{var n=localStorage.getItem('tm_names');if(n)Object.assign(names,JSON.parse(n));}catch(e){}try{var o=localStorage.getItem('tm_offer');if(o)Object.assign(offerTypes,JSON.parse(o));}catch(e){}}
+function saveLS(){try{localStorage.setItem('tm_spend',JSON.stringify(spend));}catch(e){}try{localStorage.setItem('tm_status',JSON.stringify(statuses));}catch(e){}try{localStorage.setItem('tm_names',JSON.stringify(names));}catch(e){}try{localStorage.setItem('tm_offer',JSON.stringify(offerTypes));}catch(e){}}
+function saveAnTarget(){anTarget=parseFloat(document.getElementById('anTarget').value)||1.50;try{localStorage.setItem('tm_antarget',anTarget);}catch(e){}}
+function saveName(k){var el=document.getElementById('name-'+k);if(!el)return;var v=el.innerText.trim();if(v)names[k]=v;else el.innerText=names[k];saveLS();updateRefs();}
+
+var GEO_COLORS=['#1570ef','#10b981','#f59e0b','#ec4899','#8b5cf6','#f97316','#0ea5e9','#14b8a6'];
+var FLAG={US:'\ud83c\uddfa\ud83c\uddf8',GB:'\ud83c\uddec\ud83c\udde7',CA:'\ud83c\udde8\ud83c\udde6',AU:'\ud83c\udde6\ud83c\uddfa',FR:'\ud83c\uddeb\ud83c\uddf7',DE:'\ud83c\udde9\ud83c\uddea',NL:'\ud83c\uddf3\ud83c\uddf1',UA:'\ud83c\uddfa\ud83c\udde6',LT:'\ud83c\uddf1\ud83c\uddf9',PL:'\ud83c\uddf5\ud83c\uddf1',ZA:'\ud83c\uddff\ud83c\udde6',AE:'\ud83c\udde6\ud83c\uddea',Other:'\ud83c\udf0d'};
+var TIPS={clicks:'Total number of clicks. Source: OF API clicks_total.',subs:'Number of subscriptions. Source: OF API subs_total.',spenders:'Fans who made a payment.',cr:'CR = Subscriptions / Clicks x 100%.',msgs3:'Fans with 3+ messages. Engagement indicator. Source: listSmartLinkFans.',revenue:'Net revenue attributed via Smart Link.',spend:'Meta Ads spend. Entered manually.',cpc:'Cost Per Click = Spend / Clicks.',cpf:'Cost Per Fan = Spend / Subscriptions.',roas:'ROAS = Revenue / Spend.',romi:'ROMI = (Revenue − Spend) / Spend × 100%. Shows net return on ad spend as %.'};
+var tipEl=null;
+function showTip(e,k){hideTip();tipEl=document.createElement('div');tipEl.className='tip-box';tipEl.style.display='block';tipEl.textContent=TIPS[k]||'';document.body.appendChild(tipEl);var r=e.target.getBoundingClientRect();var left=r.right-tipEl.offsetWidth;if(left<4)left=4;tipEl.style.top=(r.top-tipEl.offsetHeight-8+window.scrollY)+'px';tipEl.style.left=left+'px';}
+function hideTip(){if(tipEl){tipEl.remove();tipEl=null;}}
+function th(label,key,left){var a=left?'class="thl"':'';var t=key?' <span class="tip-i" onmouseenter="showTip(event,\''+key+'\')" onmouseleave="hideTip()">?</span>':'';return '<th '+a+'><span class="thw">'+label+t+'</span></th>';}
+function buildThead(id){document.getElementById(id).innerHTML='<th class="thl">Model</th><th class="thl">Status</th><th class="thl th-offer">Offer</th>'+th('Clicks','clicks')+th('Subs','subs')+th('Spend','spenders')+th('CR%','cr')+th('3F+ msg','msgs3')+th('Revenue','revenue')+th('Meta $','spend')+th('CPC','cpc')+th('CPF','cpf')+th('ROAS','roas')+th('ROMI','romi');}
+function fmt(v){return '$'+Number(v||0).toFixed(2);}
+function num(v){return Number(v||0).toLocaleString();}
+function crBadge(cr){var c=cr>=10?'b-g':cr>=5?'b-b':cr>=2?'b-a':'b-r';return '<span class="badge '+c+'">'+cr.toFixed(2)+'%</span>';}
+function dash(v,fn){return v!=null?fn(v):'<span class="na">—</span>';}
+var SC=['active','test','stop'],SLB={active:'Active',test:'Test',stop:'Stop'};
+function cycleStatus(id){statuses[id]=SC[(SC.indexOf(statuses[id])+1)%SC.length];saveLS();renderAll();}
+function stHtml(id){var s=statuses[id]||'active';return '<button class="status st-'+s[0]+'" onclick="cycleStatus(\''+id+'\')"><span class="st-dot"></span>'+SLB[s]+'</button>';}
+function offerTagShort(id){
+  var v=offerTypes[id]||'Free Trial',tl=v==='Tracking Link';
+  return '<span style="display:inline-block;font-size:9px;font-weight:700;letter-spacing:.02em;padding:1px 5px;border-radius:5px;background:'+(tl?'#fdf2f8':'#eff6ff')+';color:'+(tl?'#be185d':'#2563eb')+';margin-left:6px;vertical-align:middle;">'+(tl?'TL':'FTL')+'</span>';
+}
+function offerTagSuffix(id){var v=offerTypes[id]||'Free Trial';return v==='Tracking Link'?'TL':'FTL';}
+function changeOffer(sel,id){offerTypes[id]=sel.value;saveLS();paintOfferSelect(sel);renderAnalytics();if(document.getElementById('anContent'))renderAnalysis();}
+function paintOfferSelect(sel){var ft=sel.value==='Tracking Link';sel.style.background=ft?'#fdf2f8':'#eff6ff';sel.style.color=ft?'#be185d':'#2563eb';sel.style.borderColor=ft?'#fbcfe8':'#bfdbfe';}
+function offerSelect(id){
+  var v=offerTypes[id]||'Free Trial';
+  return '<select onchange="changeOffer(this,\''+id+'\')" onfocus="this._v=this.value" style="font-size:10px;font-weight:600;padding:1px 4px;border-radius:5px;width:100%;max-width:100px;border:1px solid '+(v==='Tracking Link'?'#fbcfe8':'#bfdbfe')+';background:'+(v==='Tracking Link'?'#fdf2f8':'#eff6ff')+';color:'+(v==='Tracking Link'?'#be185d':'#2563eb')+';outline:none;cursor:pointer;">'
+    +'<option value="Free Trial"'+(v==='Free Trial'?' selected':'')+'>Free Trial</option>'
+    +'<option value="Tracking Link"'+(v==='Tracking Link'?' selected':'')+'>Tracking</option>'
+    +'</select>';
+}
+function calc(l){var sp=spend[l.id]||0,cr=l.clicks>0?l.subs/l.clicks*100:0;var cpc=sp>0&&l.clicks>0?sp/l.clicks:null;var cpf=sp>0&&l.subs>0?sp/l.subs:null;var roas=sp>0&&l.revenue>0?l.revenue/sp:null;var romi=sp>0?((l.revenue-sp)/sp*100):null;return{sp:sp,cr:cr,cpc:cpc,cpf:cpf,roas:roas,romi:romi};}
+function toast(msg){var t=document.getElementById('toast');t.textContent='\u2713 '+msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2000);}
+
+function renderKPI(){
+  var tC=ALL.reduce(function(a,l){return a+l.clicks;},0),tS=ALL.reduce(function(a,l){return a+l.subs;},0);
+  var tSp=ALL.reduce(function(a,l){return a+(spend[l.id]||0);},0),tR=ALL.reduce(function(a,l){return a+l.revenue;},0);
+  var tSpdr=ALL.reduce(function(a,l){return a+l.spenders;},0),tM=ALL.reduce(function(a,l){return a+l.msgs3;},0);
+  var avgCR=tC>0?tS/tC*100:0,cpf=tSp>0&&tS>0?tSp/tS:null;
+  document.getElementById('kpiRow').innerHTML=
+    '<div class="kpi"><div class="kpi-l">Clicks (SL)</div><div class="kpi-v">'+num(tC)+'</div><div class="kpi-s">'+ALL.length+' Smart Links</div></div>'+
+    '<div class="kpi"><div class="kpi-l">Subscriptions (SL)</div><div class="kpi-v">'+num(tS)+'</div><div class="kpi-s">CR '+avgCR.toFixed(2)+'%</div></div>'+
+    '<div class="kpi"><div class="kpi-l">Spenders</div><div class="kpi-v">'+tSpdr+'</div><div class="kpi-s">paying fans</div></div>'+
+    '<div class="kpi"><div class="kpi-l">3F+ msg</div><div class="kpi-v" style="color:#6941c6">'+tM+'</div><div class="kpi-s">engaged fans</div></div>'+
+    '<div class="kpi"><div class="kpi-l">Revenue (SL)</div><div class="kpi-v">'+fmt(tR)+'</div><div class="kpi-s">SL attribution</div></div>'+
+    '<div class="kpi"><div class="kpi-l">Spend (Meta)</div><div class="kpi-v">'+(tSp>0?fmt(tSp):'—')+'</div><div class="kpi-s">manual entry</div></div>'+
+    '<div class="kpi"><div class="kpi-l">CPF</div><div class="kpi-v">'+(cpf!=null?fmt(cpf):'—')+'</div><div class="kpi-s">Spend / Subs</div></div>';
+  var yrc=LINKS.YR.reduce(function(a,l){return a+l.clicks;},0),yrs=LINKS.YR.reduce(function(a,l){return a+l.subs;},0);
+  var tdc=LINKS.TD.reduce(function(a,l){return a+l.clicks;},0),tds=LINKS.TD.reduce(function(a,l){return a+l.subs;},0);
+  var vlc=LINKS.VL.reduce(function(a,l){return a+l.clicks;},0),vls=LINKS.VL.reduce(function(a,l){return a+l.subs;},0);
+  document.getElementById('an-cl').textContent=num(tC);
+  document.getElementById('an-su').textContent=num(tS);
+  document.getElementById('an-cr').textContent=avgCR.toFixed(2)+'%';
+  document.getElementById('an-ms').textContent=tM;
 }
 
-# ── FRAUD DETECTION CONFIG ───────────────────────────────────────────────────
-FRAUD_LOOKBACK_DAYS = 30   # rolling window for bot-rate stats & click log (not all-time)
-FRAUD_MAX_PAGES_PER_LINK = 100  # safety cap: 100 * 100 = 10,000 clicks/link max per run
-FRAUD_LOG_PER_LINK = 30    # most recent rows per link kept for the detail click log
-FRAUD_LOG_MAX_TOTAL = 250  # total rows kept in the click log across all links (keeps file size sane)
+function dailyRowsHtml(daily){
+  if(!daily||!daily.length)return '<tr><td colspan="6" style="text-align:center;color:var(--t3);">No daily data yet</td></tr>';
+  return daily.map(function(dy){
+    var dcr=dy.c>0?(dy.s/dy.c*100):0;
+    return '<tr><td>'+dy.d+'</td><td>'+num(dy.c)+'</td><td>'+num(dy.s)+'</td><td>'+dy.sp+'</td>'+
+      '<td style="'+(dy.r>0?'color:var(--gr);font-weight:600':'')+'">'+dcr.toFixed(2)+'%</td>'+
+      '<td>'+(dy.r>0?'<span class="badge b-g">'+fmt(dy.r)+'</span>':'<span class="na">$0.00</span>')+'</td></tr>';
+  }).join('');
+}
+function toggleDaily(id){
+  var det=document.getElementById('det-'+id),chev=document.getElementById('chev-'+id);
+  if(!det)return;
+  var open=det.style.display==='table-row';
+  det.style.display=open?'none':'table-row';
+  if(chev)chev.style.transform=open?'rotate(0deg)':'rotate(90deg)';
+}
+function renderTable(links,bodyId,conKey){
+  var maxS=Math.max.apply(null,links.map(function(l){return l.subs;}).concat([1]));
+  var rows=links.map(function(l){
+    var d=calc(l),bw=Math.round(l.subs/maxS*52),ep=l.subs>0?Math.round(l.msgs3/l.subs*100):0;
+    var daily=l.daily||[];
+    var isLk=locked[l.id];
+    var mainRow='<tr class="tr-main" id="row-'+l.id+'"'+(isLk?'':' draggable="true"')+'><td class="tdl"><div class="td-model-wrap">'+
+        '<button class="lock-btn'+(isLk?' is-locked':'')+'" onclick="event.stopPropagation();toggleLock(\''+l.id+'\')" title="'+(isLk?'Закреплено':'Не закреплено')+'">'+(isLk?'🔒':'🔓')+'</button>'+
+        '<div class="mn mn-click" onclick="toggleDaily(\''+l.id+'\')">'+
+        '<svg class="chev" id="chev-'+l.id+'" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="3"><path d="M9 6l6 6-6 6"/></svg>'+
+        '<div class="dot" style="background:'+l.color+'"></div>'+l.model+'</div></div></td>'+
+      '<td class="tdl">'+stHtml(l.id)+'</td>'+
+      '<td class="tdl td-offer" onclick="event.stopPropagation()">'+offerSelect(l.id)+'</td>'+
+      '<td>'+num(l.clicks)+'</td>'+
+      '<td><div class="bar-w">'+num(l.subs)+'<div class="bar-bg"><div class="bar-f" style="width:'+bw+'px;background:'+l.color+'"></div></div></div></td>'+
+      '<td>'+l.spenders+'</td>'+
+      '<td>'+crBadge(d.cr)+'</td>'+
+      '<td><span class="badge b-p" title="'+ep+'% of subscriptions">'+l.msgs3+'</span></td>'+
+      '<td>'+(l.revenue>0?'<span class="badge b-g">'+fmt(l.revenue)+'</span>':'<span class="na">$0.00</span>')+'</td>'+
+      '<td>'+(d.sp>0?fmt(d.sp):'<span class="na">—</span>')+'</td>'+
+      '<td>'+dash(d.cpc,fmt)+'</td><td>'+dash(d.cpf,fmt)+'</td>'+
+      '<td>'+(d.roas!=null?'<span class="badge b-b">'+d.roas.toFixed(2)+'x</span>':'<span class="na">—</span>')+'</td>'+
+      '<td>'+(d.romi!=null?'<span class="badge '+(d.romi>=0?'b-g':'b-r')+'">'+d.romi.toFixed(0)+'%</span>':'<span class="na">—</span>')+'</td></tr>';
+    var detailRow='<tr class="tr-detail" id="det-'+l.id+'" style="display:none;"><td colspan="14" style="padding:0;">'+
+        '<div class="det-wrap">'+
+          '<div class="det-note">&#x1F4C5; '+daily.length+' active day(s) &middot; Spend / CPC / CPF / ROAS are aggregate-only — Meta budget is entered manually, not per day</div>'+
+          '<div class="det-scroll"><table class="det-tbl"><thead><tr><th>Date</th><th>Clicks</th><th>Subs</th><th>Spenders</th><th>CR%</th><th>Revenue</th></tr></thead>'+
+          '<tbody>'+dailyRowsHtml(daily)+'</tbody></table></div>'+
+        '</div></td></tr>';
+    return mainRow+detailRow;
+  }).join('');
+  var tC=links.reduce(function(a,l){return a+l.clicks;},0),tS=links.reduce(function(a,l){return a+l.subs;},0);
+  var tSp=links.reduce(function(a,l){return a+(spend[l.id]||0);},0),tR=links.reduce(function(a,l){return a+l.revenue;},0);
+  var tM=links.reduce(function(a,l){return a+l.msgs3;},0),tSpdr=links.reduce(function(a,l){return a+l.spenders;},0);
+  var tCR=tC>0?tS/tC*100:0,tCPF=tSp>0&&tS>0?tSp/tS:null,tROMI=tSp>0?(tR-tSp)/tSp*100:null;
+  document.getElementById(bodyId).innerHTML=rows+'<tr class="tr-tot"><td class="tdl">TOTAL</td><td></td><td></td><td>'+num(tC)+'</td><td>'+num(tS)+'</td><td>'+tSpdr+'</td><td>'+crBadge(tCR)+'</td><td><span class="badge b-p">'+tM+'</span></td><td>'+fmt(tR)+'</td><td>'+(tSp>0?fmt(tSp):'—')+'</td><td>—</td><td>'+(tCPF!=null?fmt(tCPF):'—')+'</td><td>—</td><td>'+(tROMI!=null?'<span class="badge '+(tROMI>=0?'b-g':'b-r')+'">'+tROMI.toFixed(0)+'%</span>':'—')+'</td></tr>';
+}
 
-# ── FETCH OF API ────────────────────────────────────────────────────────────
-def api_get(url):
-    req = urllib.request.Request(
-        url,
-        headers={
-            "Authorization": f"Bearer {OF_API_KEY}",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-            "Accept": "application/json",
-        },
-    )
-    with urllib.request.urlopen(req, timeout=30) as r:
-        return json.loads(r.read())
+function renderBudget(){
+  function mk(links,cid){document.getElementById(cid).innerHTML=links.map(function(l){return '<div class="bg-row" style="flex-direction:column;align-items:stretch;gap:8px;"><div>'+offerSelect(l.id)+'</div><div style="display:flex;align-items:center;justify-content:space-between;gap:10px;"><div style="display:flex;align-items:center;gap:8px;"><div class="dot" style="background:'+l.color+'"></div><div><div style="font-size:13px;font-weight:500;">'+l.model+'</div><div style="font-size:10px;color:var(--t3);">'+num(l.clicks)+' clicks &middot; '+l.subs+' subs</div></div></div><div class="inp-w"><span class="inp-pre">$</span><input class="inp" type="number" min="0" step="0.01" id="sp_'+l.id+'" value="'+(spend[l.id]||0)+'" oninput="updateBudgetTotals()"></div></div></div>';}).join('');}
+  mk(LINKS.YR,'bgYR');mk(LINKS.TD,'bgTD');mk(LINKS.VL,'bgVL');mk(LINKS.OL,'bgOL');
+  updateBudgetTotals();
+}
+function updateBudgetTotals(){
+  function sumOf(links){return links.reduce(function(a,l){var el=document.getElementById('sp_'+l.id);return a+(el?(parseFloat(el.value)||0):(spend[l.id]||0));},0);}
+  var tYR=sumOf(LINKS.YR),tTD=sumOf(LINKS.TD),tVL=sumOf(LINKS.VL),tOL=sumOf(LINKS.OL);
+  var set=function(id,v){var el=document.getElementById(id);if(el)el.textContent=fmt(v);};
+  set('bgTotalAll',tYR+tTD+tVL+tOL);set('bgTotalYR',tYR);set('bgTotalTD',tTD);set('bgTotalVL',tVL);set('bgTotalOL',tOL);
+  set('bgSubYR',tYR);set('bgSubTD',tTD);set('bgSubVL',tVL);set('bgSubOL',tOL);
+}
+function saveBudget(){ALL.forEach(function(l){var el=document.getElementById('sp_'+l.id);if(el)spend[l.id]=parseFloat(el.value)||0;});saveLS();renderAll();updateBudgetTotals();toast('Saved');}
+function resetBudget(){ALL.forEach(function(l){spend[l.id]=0;var el=document.getElementById('sp_'+l.id);if(el)el.value=0;});saveLS();renderAll();updateBudgetTotals();}
 
-now_utc = datetime.now(timezone.utc)
-date_str = now_utc.strftime("%d.%m.%Y, %H:%M UTC")  # e.g. "22.06.2026, 14:32 UTC"
-iso_str = now_utc.strftime("%Y-%m-%dT%H:%M:00Z")
-fraud_since = (now_utc - timedelta(days=FRAUD_LOOKBACK_DAYS)).strftime("%Y-%m-%d")
+function renderAnalytics(){
+  function mk(links,cid){document.getElementById(cid).innerHTML=links.map(function(l){var d=calc(l),ep=l.subs>0?Math.round(l.msgs3/l.subs*100):0,crCol=d.cr>=10?'var(--gr)':d.cr>=5?'var(--ac)':'var(--am)';
+    return '<div class="mc" onclick="openPanel(\''+l.id+'\')"><div class="mc-name"><div class="dot" style="background:'+l.color+'"></div>'+l.model+offerTagShort(l.id)+'</div><div class="mc-row"><span>Clicks</span><span class="mc-val">'+num(l.clicks)+'</span></div><div class="mc-row"><span>Subs</span><span class="mc-val">'+l.subs+'</span></div><div class="mc-row"><span>CR%</span><span class="mc-val" style="color:'+crCol+'">'+d.cr.toFixed(2)+'%</span></div><div class="mc-row"><span>Revenue</span><span class="mc-val">'+(l.revenue>0?fmt(l.revenue):'$0.00')+'</span></div><div class="mc-msgs"><div class="mdot"></div><span>3F+ msg:</span><span class="mc-msgs-val">'+l.msgs3+'</span><span style="color:var(--t3);margin-left:auto;">('+ep+'% of subs)</span></div></div>';}).join('');}
+  mk(LINKS.YR,'mcYR');mk(LINKS.TD,'mcTD');mk(LINKS.VL,'mcVL');mk(LINKS.OL,'mcOL');
+}
 
-def classify_bot(row):
-    """Classify a bot click into a subtype based on browser_name/family/user_agent."""
-    name = (row.get("browser_name") or "").lower()
-    family = (row.get("browser_family") or "").lower()
-    ua = (row.get("user_agent") or "").lower()
-    if "facebook" in name or "facebook" in family:
-        return "fb"
-    if "telegram" in name or "telegram" in ua:
-        return "tg"
-    if "crawler" in name or "crawler" in family or "meta-externalads" in ua:
-        return "meta"
-    return "other"
+var pCharts={};
+function openPanel(id){
+  var l=ALL.filter(function(x){return x.id===id;})[0];if(!l)return;
+  var d=calc(l),isYR=LINKS.YR.indexOf(l)>=0,isTD=LINKS.TD.indexOf(l)>=0,isVL=LINKS.VL.indexOf(l)>=0,conName=isYR?names.yr:isTD?names.td:isVL?names.vl:names.ol;
+  var ep=l.subs>0?Math.round(l.msgs3/l.subs*100):0;
+  document.getElementById('pTitle').innerHTML=l.model+offerTagShort(l.id)+' — Detailed Analytics';
+  document.getElementById('pSub').textContent=conName+' &middot; '+num(l.clicks)+' clicks &middot; '+l.subs+' subs &middot; CR '+d.cr.toFixed(2)+'%';
+  Object.values(pCharts).forEach(function(c){try{c.destroy();}catch(e){}});pCharts={};
+  var geo=l.geo||[],devs=l.devs||[];
+  document.getElementById('pBody').innerHTML=
+    '<div class="p-kpis">'+
+      '<div class="kpi"><div class="kpi-l">Clicks</div><div class="kpi-v">'+num(l.clicks)+'</div><div class="kpi-s">Smart Link total</div></div>'+
+      '<div class="kpi"><div class="kpi-l">Subscriptions</div><div class="kpi-v">'+l.subs+'</div><div class="kpi-s">CR '+d.cr.toFixed(2)+'%</div></div>'+
+      '<div class="kpi"><div class="kpi-l">Revenue (SL)</div><div class="kpi-v">'+(l.revenue>0?fmt(l.revenue):'—')+'</div><div class="kpi-s">attribution</div></div>'+
+      '<div class="kpi"><div class="kpi-l">3F+ msg</div><div class="kpi-v" style="color:#6941c6">'+l.msgs3+'</div><div class="kpi-s">'+ep+'% of subs</div></div>'+
+    '</div>'+
+    '<div class="p-charts">'+
+      '<div class="pcc"><div class="pcc-title">\ud83c\udf0d Click Geography</div><div class="pcc-wrap"><canvas id="pGeo"></canvas></div>'+
+        '<div style="margin-top:10px;">'+geo.slice(0,7).map(function(g,i){return '<div class="geo-row"><div class="geo-c" style="background:'+GEO_COLORS[i]+'"></div><span style="flex:1">'+(FLAG[g.c]||'\ud83c\udf0d')+' '+g.c+'</span><span style="font-weight:600">'+g.n+'</span><span style="color:var(--t3);font-size:11px;width:38px;text-align:right">'+g.s.toFixed(1)+'%</span></div>';}).join('')+'</div>'+
+      '</div>'+
+      '<div class="pcc"><div class="pcc-title">\ud83d\udcf1 Devices</div><div class="pcc-wrap"><canvas id="pDev"></canvas></div>'+
+        '<div style="margin-top:10px;">'+devs.map(function(dv){return '<div class="geo-row"><div class="geo-c" style="background:'+dv.cl+'"></div><span style="flex:1">'+dv.d+'</span><span style="font-weight:600">'+dv.n+'</span><span style="color:var(--t3);font-size:11px;width:38px;text-align:right">'+dv.s.toFixed(1)+'%</span></div>';}).join('')+'</div>'+
+      '</div>'+
+    '</div>'+
+    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;">'+
+      '<div class="kpi"><div class="kpi-l">Spenders</div><div class="kpi-v">'+l.spenders+'</div><div class="kpi-s">paying fans</div></div>'+
+      '<div class="kpi"><div class="kpi-l">Spend (Meta)</div><div class="kpi-v">'+(d.sp>0?fmt(d.sp):'—')+'</div><div class="kpi-s">manual</div></div>'+
+      '<div class="kpi"><div class="kpi-l">CPF</div><div class="kpi-v">'+(d.cpf!=null?fmt(d.cpf):'—')+'</div><div class="kpi-s">Spend / Subs</div></div>'+
+    '</div>';
+  document.getElementById('pov').classList.add('open');
+  setTimeout(function(){
+    if(geo.length){pCharts.geo=new Chart(document.getElementById('pGeo'),{type:'doughnut',data:{labels:geo.map(function(g){return g.c;}),datasets:[{data:geo.map(function(g){return g.n;}),backgroundColor:GEO_COLORS,borderWidth:2,borderColor:'#f5f6f8'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{display:false}}}});}
+    if(devs.length){pCharts.dev=new Chart(document.getElementById('pDev'),{type:'doughnut',data:{labels:devs.map(function(dv){return dv.d;}),datasets:[{data:devs.map(function(dv){return dv.n;}),backgroundColor:devs.map(function(dv){return dv.cl;}),borderWidth:2,borderColor:'#f5f6f8'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{position:'bottom',labels:{font:{size:11},color:'#475467',boxWidth:10}}}}});}
+  },60);
+}
+function closePanel(){document.getElementById('pov').classList.remove('open');Object.values(pCharts).forEach(function(c){try{c.destroy();}catch(e){}});pCharts={};}
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closePanel();});
 
-def fmt_click_time(iso):
-    try:
-        return iso.replace("T", " ")[:16]
-    except Exception:
-        return iso
+function renderMsgsBarInto(links,cid){
+  var el=document.getElementById(cid);if(!el)return;
+  var maxM=Math.max.apply(null,links.map(function(l){return l.msgs3;}).concat([1]));
+  el.innerHTML=links.map(function(l){var w=Math.round(l.msgs3/maxM*100),ep=l.subs>0?Math.round(l.msgs3/l.subs*100):0;return '<div class="bar-item"><div class="bar-label"><span style="display:flex;align-items:center;gap:5px;font-size:12px;"><div class="dot" style="background:'+l.color+'"></div>'+l.model+offerTagShort(l.id)+'</span><span style="font-size:12px;font-weight:600;color:#6941c6">'+l.msgs3+' <span style="color:var(--t3);font-weight:400">('+ep+'% subs)</span></span></div><div class="bar-track"><div class="bar-fill" style="width:'+w+'%;background:linear-gradient(90deg,#6941c6,#9e77ed)"></div></div></div>';}).join('');
+}
 
-def fetch_clicks(link_id):
-    """Paginate through listSmartLinkClicks for the rolling fraud window."""
-    rows = []
-    offset = 0
-    hit_cap = True
-    for _ in range(FRAUD_MAX_PAGES_PER_LINK):
-        url = (
-            f"https://app.onlyfansapi.com/api/smart-links/{link_id}/clicks"
-            f"?date_start={fraud_since}&limit=100&offset={offset}"
-            f"&include_bots=true&include_duplicates=true"
-        )
-        data = api_get(url)
-        page_rows = data["data"]["rows"]
-        rows.extend(page_rows)
-        if len(page_rows) < 100:
-            hit_cap = False
-            break
-        offset += 100
-    if hit_cap:
-        print(f"  FRAUD WARNING: link {link_id} hit the {FRAUD_MAX_PAGES_PER_LINK}-page cap "
-              f"({len(rows)} clicks) — true volume may be higher, bot-rate stats are a lower bound.")
-    return rows
+function renderFraud(){
+  var tdS=FSTATS.filter(function(s){return s.con==='TD';}),vlS=FSTATS.filter(function(s){return s.con==='VL';});
+  var tdT=tdS.reduce(function(a,s){return a+s.total;},0),tdB=tdS.reduce(function(a,s){return a+s.bots;},0);
+  var vlT=vlS.reduce(function(a,s){return a+s.total;},0),vlB=vlS.reduce(function(a,s){return a+s.bots;},0);
+  var allT=tdT+vlT,allB=tdB+vlB;
+  if(!FSTATS.length){
+    document.getElementById('fraudKPIs').innerHTML='<div class="kpi" style="grid-column:1/-1;"><div class="kpi-l">No data yet</div><div class="kpi-v" style="font-size:14px;color:var(--t3);">Fraud data populates on the next scheduled GitHub Action run</div></div>';
+    document.getElementById('fraudBarsYR').innerHTML='';document.getElementById('fraudBarsTD').innerHTML='';document.getElementById('fraudBarsVL').innerHTML='';if(document.getElementById('fraudBarsOL'))document.getElementById('fraudBarsOL').innerHTML='';
+    document.getElementById('fraudBotTypes').innerHTML='';
+    fFiltered=[];renderFraudTable();
+    return;
+  }
+  document.getElementById('fraudKPIs').innerHTML=
+    '<div class="kpi"><div class="kpi-l">Total Clicks</div><div class="kpi-v">'+allT+'</div><div class="kpi-s">last 30 days</div></div>'+
+    '<div class="kpi"><div class="kpi-l">TD &middot; Bots</div><div class="kpi-v" style="color:var(--rd)">'+tdB+'</div><div class="kpi-s">'+(tdT>0?Math.round(tdB/tdT*100):0)+'% bot rate</div></div>'+
+    '<div class="kpi"><div class="kpi-l">VL &middot; Bots</div><div class="kpi-v" style="color:var(--am)">'+vlB+'</div><div class="kpi-s">'+(vlT>0?Math.round(vlB/vlT*100):0)+'% bot rate</div></div>'+
+    '<div class="kpi"><div class="kpi-l">TelegramBot</div><div class="kpi-v" style="color:#7c3aed">'+FSTATS.reduce(function(a,s){return a+s.tgBot;},0)+'</div><div class="kpi-s">across all models</div></div>'+
+    '<div class="kpi"><div class="kpi-l">FacebookBot</div><div class="kpi-v" style="color:var(--rd)">'+FSTATS.reduce(function(a,s){return a+s.fbBot;},0)+'</div><div class="kpi-s">Meta crawler</div></div>'+
+    '<div class="kpi"><div class="kpi-l">Real traffic</div><div class="kpi-v" style="color:var(--gr)">'+FSTATS.reduce(function(a,s){return a+s.real;},0)+'</div><div class="kpi-s">'+(allT>0?(100-Math.round(allB/allT*100)):100)+'% clean</div></div>';
+  function mkBars(conKey,elId){var s=FSTATS.filter(function(x){return x.con===conKey;});document.getElementById(elId).innerHTML=s.map(function(x){var pct=x.total>0?Math.round(x.bots/x.total*100):0;return '<div style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;font-size:12px;"><span style="display:flex;align-items:center;gap:6px;font-weight:500;"><div style="width:7px;height:7px;border-radius:50%;background:'+x.color+';flex-shrink:0;"></div>'+x.model+'</span><span style="display:flex;gap:12px;"><span style="color:var(--gr)">\u2713 '+x.real+'</span><span style="color:var(--rd)">\u26a0 '+x.bots+'</span><span style="color:'+(pct>0?'var(--rd)':'var(--gr)')+';font-weight:700;">'+pct+'%</span></span></div><div class="bot-bar"><div class="bot-bar-f" style="width:'+Math.round(x.bots/Math.max(x.total,1)*100)+'%;"></div></div></div>';}).join('');}
+  mkBars('YR','fraudBarsYR');mkBars('TD','fraudBarsTD');mkBars('VL','fraudBarsVL');mkBars('OL','fraudBarsOL');
+  function mkTypes(conKey,conName,bc){var s=FSTATS.filter(function(x){return x.con===conKey;});var tg=s.reduce(function(a,x){return a+x.tgBot;},0),fb=s.reduce(function(a,x){return a+x.fbBot;},0),mc=s.reduce(function(a,x){return a+x.metaCrl;},0),ob=s.reduce(function(a,x){return a+(x.otherBot||0);},0);return '<div><div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><span class="cbadge '+bc+'">'+conKey+'</span><span style="font-size:13px;font-weight:600;">'+conName+'</span></div><div style="display:flex;flex-direction:column;gap:6px;"><div style="display:flex;justify-content:space-between;font-size:12px;padding:7px 12px;background:var(--rdbg);border-radius:var(--rsm);">\ud83e\udd16 FacebookBot<span style="font-weight:700;color:var(--rd)">'+fb+'</span></div><div style="display:flex;justify-content:space-between;font-size:12px;padding:7px 12px;background:#f4f3ff;border-radius:var(--rsm);">\ud83d\udce8 TelegramBot<span style="font-weight:700;color:#6941c6">'+tg+'</span></div><div style="display:flex;justify-content:space-between;font-size:12px;padding:7px 12px;background:var(--ambg);border-radius:var(--rsm);">\ud83d\udd77 Meta crawler<span style="font-weight:700;color:var(--am)">'+mc+'</span></div><div style="display:flex;justify-content:space-between;font-size:12px;padding:7px 12px;background:var(--bg);border-radius:var(--rsm);">\u2753 Other Bot<span style="font-weight:700;color:var(--t2)">'+ob+'</span></div></div></div>';}
+  document.getElementById('fraudBotTypes').innerHTML=mkTypes('YR',names.yr,'cbd-yr')+mkTypes('TD',names.td,'cbd-td')+mkTypes('VL',names.vl,'cbd-vl')+mkTypes('OL',names.ol,'cbd-ol');
+  fFiltered=FCLICKS.slice();renderFraudTable();
+}
+function setFF(btn){var ft=btn.getAttribute('data-ftype'),fv=btn.getAttribute('data-fval');fFilters[ft]=fv;document.querySelectorAll('[data-ftype="'+ft+'"]').forEach(function(b){b.classList.remove('active');});btn.classList.add('active');fPage=0;applyFraudFilters();}
+function applyFraudFilters(){fFiltered=FCLICKS.filter(function(r){if(fFilters.con!=='all'&&r.con!==fFilters.con)return false;if(fFilters.model!=='all'&&r.model!==fFilters.model)return false;if(fFilters.status==='ok'&&r.bot)return false;if(fFilters.status==='bot'&&!r.bot)return false;if(fFilters.device!=='all'&&r.device!==fFilters.device)return false;return true;});fPage=0;renderFraudTable();}
+function renderFraudTable(){
+  var start=fPage*F_PER_PG,page=fFiltered.slice(start,start+F_PER_PG),total=fFiltered.length;
+  document.getElementById('fraudCount').textContent='Showing '+(total>0?Math.min(start+F_PER_PG,total):0)+' of '+total;
+  document.getElementById('fraudPag').textContent='Page '+(fPage+1)+' of '+Math.max(1,Math.ceil(total/F_PER_PG));
+  var cb={TD:'<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:6px;background:#ecfdf3;color:#067647;">TD</span>',VL:'<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:6px;background:#eff4ff;color:#1570ef;">VL</span>'};
+  document.getElementById('fraudTbody').innerHTML=page.map(function(r){var fs=FSTATS.filter(function(s){return s.model===r.model&&s.con===r.con;})[0];var col=fs?fs.color:'#98a2b3';var di=r.device==='Mobile'?'\ud83d\udcf1':r.device==='Desktop'?'\ud83d\udcbb':'\ud83e\udd16';var tag=r.lid?offerTagShort(r.lid):'';return '<tr class="'+(r.bot?'is-bot':'')+'"><td class="fr-time">'+r.t+'</td><td>'+(cb[r.con]||r.con)+'</td><td><span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:8px;background:'+col+'22;color:'+col+'">'+r.model+'</span>'+tag+'</td><td class="fr-ip" title="'+r.ip+'">'+r.ip+'</td><td class="fr-ua" title="'+r.ua+'">'+r.ua+'</td><td style="font-size:11px;color:var(--t3);font-family:monospace;">'+r.id.slice(0,18)+'\u2026</td><td>'+(FLAG[r.country]||'\ud83c\udf0d')+' '+r.country+'</td><td>'+di+' '+r.device+'</td><td style="text-align:center;">'+r.gross+'</td><td>'+(r.bot?'<span class="fr-bot">Bot</span>':'<span class="fr-ok">Ok</span>')+'</td></tr>';}).join('');}
+function fraudChangePage(dir){var maxP=Math.ceil(fFiltered.length/F_PER_PG)-1;fPage=Math.max(0,Math.min(maxP,fPage+dir));renderFraudTable();}
 
-DEVICE_COLORS = {"Mobile": "#1570ef", "Bot": "#f04438", "Desktop": "#10b981", "Tablet": "#f59e0b", "Other": "#98a2b3"}
+// ── ANALYSIS ────────────────────────────────────────────────────────────────
+function setAnalysisCon(con,btn){
+  anConCtx=con==='all'?null:con; anScope=con;
+  document.querySelectorAll('[data-congroup]').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  renderAnalysis();
+}
+function setAnalysisModel(id,btn){
+  anScope=id;
+  document.querySelectorAll('[data-modelgroup]').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  renderAnalysis();
+}
+function renderAnalysisModelBtns(){
+  var c=document.getElementById('analysisModelBtns'),lbl=document.getElementById('anModelLabel');
+  if(!c||!lbl)return;
+  if(!anConCtx){c.innerHTML='';lbl.textContent='';return;}
+  var links=anConCtx==='YR'?LINKS.YR:anConCtx==='TD'?LINKS.TD:anConCtx==='VL'?LINKS.VL:LINKS.OL;
+  lbl.textContent='Model:';
+  c.innerHTML=links.map(function(l){return '<button class="scope-btn'+(anScope===l.id?' active':'')+'" data-modelgroup data-scope="'+l.id+'" onclick="setAnalysisModel(\''+l.id+'\',this)">'+l.model+'</button>';}).join('');
+}
+function anScopedLinks(){if(anScope==='all')return ALL;if(anScope==='YR')return LINKS.YR;if(anScope==='TD')return LINKS.TD;if(anScope==='VL')return LINKS.VL;if(anScope==='OL')return LINKS.OL;return ALL.filter(function(l){return l.id===anScope;});}
+function anDateRange(){var f=(document.getElementById('anFrom')||{}).value,t=(document.getElementById('anTo')||{}).value;return{from:f||null,to:t||null};}
+function anModelStats(l,range){
+  var d=l.daily||[],clicks,subs,spenders,revenue;
+  if(!range.from&&!range.to){clicks=l.clicks;subs=l.subs;spenders=l.spenders;revenue=l.revenue;}
+  else{var inR=d.filter(function(x){return(!range.from||x.d>=range.from)&&(!range.to||x.d<=range.to);});clicks=inR.reduce(function(a,x){return a+x.c;},0);subs=inR.reduce(function(a,x){return a+x.s;},0);spenders=inR.reduce(function(a,x){return a+x.sp;},0);revenue=inR.reduce(function(a,x){return a+x.r;},0);}
+  var sp=spend[l.id]||0,cpf=subs>0&&sp>0?sp/subs:null,spm=clicks>0?subs/clicks*1000:0,cvr=clicks>0?subs/clicks*100:0;
+  var roas=sp>0&&revenue>0?revenue/sp:null,romi=sp>0?(revenue-sp)/sp*100:null;
+  var lastActive=d.length?d[d.length-1].d:l.startDate;
+  return{link:l,clicks:clicks,subs:subs,spenders:spenders,revenue:revenue,spend:sp,cpf:cpf,spm:spm,cvr:cvr,roas:roas,romi:romi,lastActive:lastActive};
+}
+var anCi={};
+function anIds(suf){return {sum:'anSum_'+suf,chSPM:'anChSPM_'+suf,chCPF:'anChCPF_'+suf,chFans:'anChFans_'+suf,chCVR:'anChCVR_'+suf,msgs:'anMsgs_'+suf,dfHead:'anDFH_'+suf,dfBody:'anDFB_'+suf,dcHead:'anDCH_'+suf,dcBody:'anDCB_'+suf};}
+function summaryRowsHtml(sorted){
+  return sorted.length?sorted.map(function(s){
+    var l=s.link;
+    return '<tr><td class="tdl"><div class="mn"><div class="dot" style="background:'+l.color+'"></div>'+l.model+'</div></td>'+
+      '<td class="tdl">'+offerSelect(l.id)+'</td>'+
+      '<td>'+(s.spend>0?fmt(s.spend):'<span class="na">—</span>')+'</td>'+
+      '<td>'+num(s.clicks)+'</td>'+
+      '<td>'+num(s.subs)+'</td>'+
+      '<td>'+s.cvr.toFixed(2)+'%</td>'+
+      '<td>'+s.spm.toFixed(1)+'</td>'+
+      '<td style="font-weight:600;color:'+(s.cpf==null?'var(--t3)':s.cpf<=anTarget?'var(--gr)':s.cpf<=anTarget*1.3?'var(--am)':'var(--rd)')+'">'+(s.cpf!=null?fmt(s.cpf):'<span class="na">—</span>')+'</td>'+
+      '<td>'+(s.roas!=null?'<span class="badge b-b">'+s.roas.toFixed(2)+'x</span>':'<span class="na">—</span>')+'</td>'+
+      '<td>'+(s.romi!=null?'<span class="badge '+(s.romi>=0?'b-g':'b-r')+'">'+s.romi.toFixed(0)+'%</span>':'<span class="na">—</span>')+'</td>'+
+      '<td class="tdl">'+s.lastActive+'</td>'+
+      '<td>'+stHtml(l.id)+'</td></tr>';
+  }).join('') : '<tr><td colspan="10" style="text-align:center;color:var(--t3);padding:16px;">No models</td></tr>';
+}
+function contractorSectionHTML(con){
+  var conName=con==='YR'?names.yr:con==='TD'?names.td:names.vl, badge=con==='YR'?'cbd-yr':con==='TD'?'cbd-td':'cbd-vl', ids=anIds(con);
+  return ''
+    +'<div style="display:flex;align-items:center;gap:8px;margin:18px 0 10px;">'
+      +'<span class="cbadge '+badge+'">'+con+'</span><span style="font-weight:700;font-size:15px;">'+conName+'</span>'
+    +'</div>'
+    +'<div class="card" style="margin-bottom:12px;">'
+      +'<div class="card-hdr"><div class="card-t">📋 Summary</div><div class="card-s">ranked by CPF</div></div>'
+      +'<div style="overflow-x:auto;"><table class="tbl"><thead><tr><th class="thl">Model</th><th class="thl">Offer</th><th>Spend</th><th>OF Clicks</th><th>OF Fans</th><th>CVR%</th><th>SPM</th><th>CPF</th><th>ROAS</th><th>ROMI</th><th class="thl">Last Active</th><th>Status</th></tr></thead><tbody id="'+ids.sum+'"></tbody></table></div>'
+    +'</div>'
+    +'<div class="chart-split" style="margin-bottom:12px;">'
+      +'<div class="card"><div class="card-hdr"><div class="card-t">SPM</div><div class="card-s">fans / 1,000 clicks</div></div><div style="padding:14px;"><div class="chart-wrap"><canvas id="'+ids.chSPM+'"></canvas></div></div></div>'
+      +'<div class="card"><div class="card-hdr"><div class="card-t">CPF ($)</div></div><div style="padding:14px;"><div class="chart-wrap"><canvas id="'+ids.chCPF+'"></canvas></div></div></div>'
+    +'</div>'
+    +'<div class="chart-split" style="margin-bottom:12px;">'
+      +'<div class="card"><div class="card-hdr"><div class="card-t">New fans</div></div><div style="padding:14px;"><div class="chart-wrap"><canvas id="'+ids.chFans+'"></canvas></div></div></div>'
+      +'<div class="card"><div class="card-hdr"><div class="card-t">CVR%</div></div><div style="padding:14px;"><div class="chart-wrap"><canvas id="'+ids.chCVR+'"></canvas></div></div></div>'
+    +'</div>'
+    +'<div class="card" style="margin-bottom:12px;"><div class="card-hdr"><div class="card-t">3F+ msg</div><div class="card-s">engagement</div></div><div style="padding:16px;" id="'+ids.msgs+'"></div></div>'
+    +'<div class="chart-split" style="margin-bottom:8px;">'
+      +'<div class="card"><div class="card-hdr"><div class="card-t">📅 New fans by day</div></div><div class="daily-tbl-wrap"><table class="tbl"><thead><tr id="'+ids.dfHead+'"></tr></thead><tbody id="'+ids.dfBody+'"></tbody></table></div></div>'
+      +'<div class="card"><div class="card-hdr"><div class="card-t">📅 OF Clicks by day</div></div><div class="daily-tbl-wrap"><table class="tbl"><thead><tr id="'+ids.dcHead+'"></tr></thead><tbody id="'+ids.dcBody+'"></tbody></table></div></div>'
+    +'</div>';
+}
+function modelSectionHTML(linkId){
+  var l=ALL.filter(function(x){return x.id===linkId;})[0]; if(!l)return '';
+  var con=LINKS.YR.indexOf(l)>=0?'YR':LINKS.TD.indexOf(l)>=0?'TD':LINKS.VL.indexOf(l)>=0?'VL':'OL', conName=con==='YR'?names.yr:con==='TD'?names.td:con==='VL'?names.vl:names.ol, badge=con==='YR'?'cbd-yr':con==='TD'?'cbd-td':con==='VL'?'cbd-vl':'cbd-ol', ids=anIds(linkId);
+  return ''
+    +'<div style="display:flex;align-items:center;gap:8px;margin:18px 0 10px;">'
+      +'<div class="dot" style="background:'+l.color+'"></div><span style="font-weight:700;font-size:15px;">'+l.model+'</span><span class="cbadge '+badge+'">'+con+'</span>'
+    +'</div>'
+    +'<div class="chart-split" style="margin-bottom:8px;">'
+      +'<div class="card"><div class="card-hdr"><div class="card-t">📅 New fans by day</div></div><div class="daily-tbl-wrap"><table class="tbl"><thead><tr id="'+ids.dfHead+'"></tr></thead><tbody id="'+ids.dfBody+'"></tbody></table></div></div>'
+      +'<div class="card"><div class="card-hdr"><div class="card-t">📅 OF Clicks by day</div></div><div class="daily-tbl-wrap"><table class="tbl"><thead><tr id="'+ids.dcHead+'"></tr></thead><tbody id="'+ids.dcBody+'"></tbody></table></div></div>'
+    +'</div>';
+}
+function mkBarInto(cid,labels,data,colors){
+  var el=document.getElementById(cid);if(!el)return;
+  try{anCi[cid]=new Chart(el,{type:'bar',data:{labels:labels,datasets:[{data:data,backgroundColor:colors,borderRadius:5,borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#98a2b3',font:{size:10}},grid:{display:false}},y:{ticks:{color:'#98a2b3',font:{size:10}},grid:{color:'rgba(0,0,0,.05)'}}}}});}catch(e){console.warn('Chart.js unavailable',e);}
+}
+function fillDaily(links,range,headFans,bodyFans,headClicks,bodyClicks){
+  var dateSet={};
+  links.forEach(function(l){(l.daily||[]).forEach(function(d){if((!range.from||d.d>=range.from)&&(!range.to||d.d<=range.to))dateSet[d.d]=true;});});
+  var dates=Object.keys(dateSet).sort();
+  function build(headId,bodyId,field){
+    var headEl=document.getElementById(headId),bodyEl=document.getElementById(bodyId);if(!headEl||!bodyEl)return;
+    headEl.innerHTML='<th class="thl">Date</th>'+links.map(function(l){return '<th>'+l.model.split(' ')[0]+' '+offerTagSuffix(l.id)+'</th>';}).join('')+'<th>TOTAL</th>';
+    bodyEl.innerHTML=dates.length?dates.map(function(dt){
+      var rowTotal=0;
+      var cells=links.map(function(l){var rec=(l.daily||[]).filter(function(x){return x.d===dt;})[0];var v=rec?rec[field]:0;rowTotal+=v;return '<td>'+(v>0?num(v):'<span class="na">—</span>')+'</td>';}).join('');
+      return '<tr><td class="tdl">'+dt+'</td>'+cells+'<td style="font-weight:700">'+num(rowTotal)+'</td></tr>';
+    }).join('') : ('<tr><td colspan="'+(links.length+2)+'" style="text-align:center;color:var(--t3);padding:16px;">No daily data for this period</td></tr>');
+  }
+  build(headFans,bodyFans,'s'); build(headClicks,bodyClicks,'c');
+}
+function fillContractorSection(con,range){
+  var links=con==='YR'?LINKS.YR:con==='TD'?LINKS.TD:con==='VL'?LINKS.VL:LINKS.OL, ids=anIds(con);
+  var stats=links.map(function(l){return anModelStats(l,range);});
+  var sorted=stats.slice().sort(function(a,b){var ac=a.cpf==null?Infinity:a.cpf,bc=b.cpf==null?Infinity:b.cpf;return ac-bc;});
+  document.getElementById(ids.sum).innerHTML=summaryRowsHtml(sorted);
+  var labels=sorted.map(function(s){return s.link.model.split(' ')[0]+' '+offerTagSuffix(s.link.id);}),colors=sorted.map(function(s){return s.link.color;});
+  mkBarInto(ids.chSPM,labels,sorted.map(function(s){return+s.spm.toFixed(1);}),colors);
+  mkBarInto(ids.chCPF,labels,sorted.map(function(s){return s.cpf!=null?+s.cpf.toFixed(2):0;}),colors);
+  mkBarInto(ids.chFans,labels,sorted.map(function(s){return s.subs;}),colors);
+  mkBarInto(ids.chCVR,labels,sorted.map(function(s){return+s.cvr.toFixed(2);}),colors);
+  renderMsgsBarInto(links,ids.msgs);
+  fillDaily(links,range,ids.dfHead,ids.dfBody,ids.dcHead,ids.dcBody);
+}
+function fillModelSection(linkId,range){
+  var l=ALL.filter(function(x){return x.id===linkId;})[0]; if(!l)return;
+  var ids=anIds(linkId);
+  fillDaily([l],range,ids.dfHead,ids.dfBody,ids.dcHead,ids.dcBody);
+}
+function renderAnalysis(){
+  renderAnalysisModelBtns();
+  var links=anScopedLinks(),range=anDateRange();
+  var stats=links.map(function(l){return anModelStats(l,range);});
+  var totFans=stats.reduce(function(a,s){return a+s.subs;},0),totClicks=stats.reduce(function(a,s){return a+s.clicks;},0);
+  var totSpend=stats.reduce(function(a,s){return a+s.spend;},0);
+  var avgCPF=totFans>0&&totSpend>0?totSpend/totFans:null,avgSPM=totClicks>0?totFans/totClicks*1000:0;
+  var withCPF=stats.filter(function(s){return s.cpf!=null;});
+  var best=withCPF.length?withCPF.reduce(function(a,b){return b.cpf<a.cpf?b:a;}):null;
+  document.getElementById('anKPIs').innerHTML=
+    '<div class="kpi"><div class="kpi-l">New Fans</div><div class="kpi-v">'+num(totFans)+'</div><div class="kpi-s">'+stats.length+' model(s)</div></div>'+
+    '<div class="kpi"><div class="kpi-l">Avg CPF</div><div class="kpi-v" style="color:'+(avgCPF!=null?(avgCPF<=anTarget?'var(--gr)':avgCPF<=anTarget*1.3?'var(--am)':'var(--rd)'):'var(--t3)')+'">'+(avgCPF!=null?fmt(avgCPF):'—')+'</div><div class="kpi-s">target $'+anTarget.toFixed(2)+'</div></div>'+
+    '<div class="kpi"><div class="kpi-l">Best CPF</div><div class="kpi-v" style="color:var(--gr)">'+(best?fmt(best.cpf):'—')+'</div><div class="kpi-s">'+(best?best.link.model:'—')+'</div></div>'+
+    '<div class="kpi"><div class="kpi-l">Total Spend</div><div class="kpi-v">'+(totSpend>0?fmt(totSpend):'—')+'</div><div class="kpi-s">'+stats.length+' model(s)</div></div>'+
+    '<div class="kpi"><div class="kpi-l">OF Clicks</div><div class="kpi-v">'+num(totClicks)+'</div><div class="kpi-s">Smart Links</div></div>'+
+    '<div class="kpi"><div class="kpi-l">Avg SPM</div><div class="kpi-v">'+avgSPM.toFixed(1)+'</div><div class="kpi-s">fans / 1,000 clicks</div></div>';
+  var content=document.getElementById('anContent'); if(!content)return;
+  if(anScope==='all'){
+    content.innerHTML=contractorSectionHTML('YR')+contractorSectionHTML('TD')+contractorSectionHTML('VL')+contractorSectionHTML('OL');
+    fillContractorSection('YR',range);fillContractorSection('TD',range);fillContractorSection('VL',range);fillContractorSection('OL',range);
+  } else if(anScope==='YR'||anScope==='TD'||anScope==='VL'||anScope==='OL'){
+    content.innerHTML=contractorSectionHTML(anScope);
+    fillContractorSection(anScope,range);
+  } else {
+    content.innerHTML=modelSectionHTML(anScope);
+    fillModelSection(anScope,range);
+  }
+}
 
-def aggregate_geo(clicks, top_n=4):
-    """Country breakdown of clicks -> [{c, n, s%}], top N + 'Other' bucket, sorted desc."""
-    counts = {}
-    for c in clicks:
-        cc = c.get("country_code") or "Other"
-        counts[cc] = counts.get(cc, 0) + 1
-    total = sum(counts.values())
-    if not total:
-        return []
-    ordered = sorted(counts.items(), key=lambda kv: kv[1], reverse=True)
-    top = ordered[:top_n]
-    rest = ordered[top_n:]
-    result = [{"c": cc, "n": n, "s": round(n / total * 100, 1)} for cc, n in top]
-    if rest:
-        rest_n = sum(n for _, n in rest)
-        result.append({"c": "Other", "n": rest_n, "s": round(rest_n / total * 100, 1)})
-    return result
+function go(id,btn){
+  document.querySelectorAll('.tab-c').forEach(function(t){t.classList.remove('active');});
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
+  var el=document.getElementById('t-'+id);if(el)el.classList.add('active');
+  btn.classList.add('active');
+  if(id==='fraud')setTimeout(renderFraud,10);
+  if(id==='analysis')setTimeout(renderAnalysis,40);
+}
+function updateRefs(){
+  var e;
+  // Overview card titles
+  // Budget section labels
+  e=document.getElementById('bl-yr');if(e)e.textContent=names.yr+' \u2014 Spend ($)';
+  e=document.getElementById('bl-td');if(e)e.textContent=names.td+' \u2014 Spend ($)';
+  e=document.getElementById('bl-vl');if(e)e.textContent=names.vl+' \u2014 Spend ($)';
+  // Model data section labels
+  e=document.getElementById('anYRlbl');if(e)e.textContent=names.yr;
+  e=document.getElementById('anTDlbl');if(e)e.textContent=names.td;
+  e=document.getElementById('anVLlbl');if(e)e.textContent=names.vl;
+  // Fraud Detection card titles
+  e=document.getElementById('fr-title-yr');if(e)e.textContent=names.yr+' \u00b7 Fraud by model';
+  e=document.getElementById('fr-title-td');if(e)e.textContent=names.td+' \u00b7 Fraud by model';
+  e=document.getElementById('fr-title-vl');if(e)e.textContent=names.vl+' \u00b7 Fraud by model';
+  // Analysis scope buttons
+  e=document.getElementById('sc-yr');if(e)e.textContent=names.yr;
+  e=document.getElementById('sc-td');if(e)e.textContent=names.td;
+  e=document.getElementById('sc-vl');if(e)e.textContent=names.vl;
+  e=document.getElementById('sc-ol');if(e)e.textContent=names.ol;
+  // Budget KPI labels
+  e=document.getElementById('bg-lbl-yr');if(e)e.textContent=names.yr;
+  e=document.getElementById('bg-lbl-td');if(e)e.textContent=names.td;
+  e=document.getElementById('bg-lbl-vl');if(e)e.textContent=names.vl;
+  e=document.getElementById('bg-lbl-ol');if(e)e.textContent=names.ol;
+  // OL refs
+  e=document.getElementById('bl-ol');if(e)e.textContent=names.ol+' \u2014 Spend ($)';
+  e=document.getElementById('anOLlbl');if(e)e.textContent=names.ol;
+  e=document.getElementById('fr-title-ol');if(e)e.textContent=names.ol+' \u00b7 Fraud by model';
+}
 
-def aggregate_devices(clicks):
-    """Device-type breakdown of clicks -> [{d, n, s%, cl}], sorted desc."""
-    counts = {}
-    for c in clicks:
-        dt = c.get("browser_device_type") or "Other"
-        counts[dt] = counts.get(dt, 0) + 1
-    total = sum(counts.values())
-    if not total:
-        return []
-    ordered = sorted(counts.items(), key=lambda kv: kv[1], reverse=True)
-    return [
-        {"d": dt, "n": n, "s": round(n / total * 100, 1), "cl": DEVICE_COLORS.get(dt, "#98a2b3")}
-        for dt, n in ordered
-    ]
+/* ── Contractor reorder ── */
+/* ── Contractor collapse ── */
+var conCollapsed={};
+function loadConCollapsed(){try{var s=localStorage.getItem('tm_concollapsed');if(s)conCollapsed=JSON.parse(s);}catch(e){}}
+function saveConCollapsed(){try{localStorage.setItem('tm_concollapsed',JSON.stringify(conCollapsed));}catch(e){}}
+function toggleConCollapse(con){
+  if(conLockedState[con])return;
+  conCollapsed[con]=!conCollapsed[con];
+  saveConCollapsed();
+  applyConCollapse();
+}
+function applyConCollapse(){
+  ['YR','TD','VL','OL'].forEach(function(con){
+    var block=document.getElementById('conblk-'+con.toLowerCase());
+    if(!block)return;
+    var card=block.querySelector('.card');
+    var btn=document.getElementById('concollapse-'+con.toLowerCase());
+    if(!btn||!card)return;
+    var lk=!!conLockedState[con];
+    var col=!!conCollapsed[con];
+    // Collapsed state always respected; lock only disables the toggle button
+    card.style.display=col?'none':'';
+    btn.textContent=col?'▶':'▼';
+    btn.classList.toggle('is-collapsed',col);
+    if(lk){
+      btn.setAttribute('disabled','disabled');
+    } else {
+      btn.removeAttribute('disabled');
+    }
+  });
+}
 
-print(f"[{now_utc.isoformat()}] Fetching {len(SMART_LINKS)} Smart Links...")
+var conLockedState={};
+function loadConLocks(){try{var s=localStorage.getItem('tm_conlocked');if(s)conLockedState=JSON.parse(s);}catch(e){}}
+function saveConLocks(){try{localStorage.setItem('tm_conlocked',JSON.stringify(conLockedState));}catch(e){}}
+function toggleConLock(con){
+  conLockedState[con]=!conLockedState[con];
+  saveConLocks();
+  updateConLockUI();
+  applyConCollapse();
+  initConDrag();
+}
+function updateConLockUI(){
+  ['YR','TD','VL','OL'].forEach(function(con){
+    var btn=document.getElementById('conlock-'+con.toLowerCase());
+    if(!btn)return;
+    var lk=!!conLockedState[con];
+    btn.textContent=lk?'\uD83D\uDD12':'\uD83D\uDD13';
+    btn.classList.toggle('is-locked',lk);
+    var block=document.getElementById('conblk-'+con.toLowerCase());
+    if(block)block.setAttribute('draggable',lk?'false':'true');
+  });
+}
+function saveConOrder(){
+  var container=document.getElementById('t-overview');
+  if(!container)return;
+  var order=Array.from(container.querySelectorAll('.con')).map(function(b){return b.id.replace('conblk-','').toUpperCase();});
+  try{localStorage.setItem('tm_conorder',JSON.stringify(order));}catch(e){}
+}
+function loadConOrder(){
+  try{
+    var saved=localStorage.getItem('tm_conorder');
+    if(!saved)return;
+    var order=JSON.parse(saved);
+    var container=document.getElementById('t-overview');
+    if(!container)return;
+    var note=container.querySelector('.note');
+    order.forEach(function(con){
+      var block=document.getElementById('conblk-'+con.toLowerCase());
+      if(block&&note&&note.parentNode===container)container.insertBefore(block,note);
+      else if(block&&container)container.appendChild(block);
+    });
+  }catch(e){}
+}
+var conDragEl=null;
+function initConDrag(){
+  var container=document.getElementById('t-overview');
+  if(!container)return;
+  container.querySelectorAll('.con').forEach(function(block){
+    // Remove old listeners by cloning (lightweight)
+    block.ondragstart=null;block.ondragend=null;block.ondragover=null;block.ondragleave=null;block.ondrop=null;
+    var con=block.id.replace('conblk-','').toUpperCase();
+    if(conLockedState[con]){block.removeAttribute('draggable');return;}
+    block.setAttribute('draggable','true');
+    block.ondragstart=function(e){
+      conDragEl=this;
+      e.dataTransfer.effectAllowed='move';
+      setTimeout(function(){if(conDragEl)conDragEl.style.opacity='0.45';},0);
+    };
+    block.ondragend=function(){
+      this.style.opacity='';
+      container.querySelectorAll('.con.con-drag-over').forEach(function(b){b.classList.remove('con-drag-over');});
+      conDragEl=null;
+    };
+    block.ondragover=function(e){
+      e.preventDefault();
+      var c=this.id.replace('conblk-','').toUpperCase();
+      if(!conLockedState[c])this.classList.add('con-drag-over');
+    };
+    block.ondragleave=function(){this.classList.remove('con-drag-over');};
+    block.ondrop=function(e){
+      e.preventDefault();
+      this.classList.remove('con-drag-over');
+      var c=this.id.replace('conblk-','').toUpperCase();
+      if(!conDragEl||conDragEl===this||conLockedState[c])return;
+      var blocks=Array.from(container.querySelectorAll('.con'));
+      var si=blocks.indexOf(conDragEl),di=blocks.indexOf(this);
+      if(si<di)this.parentNode.insertBefore(conDragEl,this.nextSibling);
+      else this.parentNode.insertBefore(conDragEl,this);
+      saveConOrder();
+    };
+  });
+}
 
-td_links = []
-vl_links = []
-yr_links = []
-ol_links = []
-errors = []
-fstats_list = []
-fclicks_list = []
+/* ── Row lock ── */
+var locked={};
+function loadLocks(){try{var s=localStorage.getItem('tm_locked');if(s)locked=JSON.parse(s);}catch(e){}}
+function saveLocks(){try{localStorage.setItem('tm_locked',JSON.stringify(locked));}catch(e){}}
+function toggleLock(id){locked[id]=!locked[id];saveLocks();renderAll();}
 
-for lnk in SMART_LINKS:
-    # ── FRAUD DETECTION + live geo/device aggregation (runs first: entry below needs the result) ──
-    live_geo, live_devs = [], []
-    try:
-        clicks = fetch_clicks(lnk["id"])
-        total = len(clicks)
-        bots = sum(1 for c in clicks if c.get("is_bot"))
-        real = total - bots
-        tg = fb = meta = other_bot = 0
-        for c in clicks:
-            if not c.get("is_bot"):
-                continue
-            cls = classify_bot(c)
-            if cls == "fb": fb += 1
-            elif cls == "tg": tg += 1
-            elif cls == "meta": meta += 1
-            else: other_bot += 1
-        fstats_list.append({
-            "model": lnk["model"], "con": lnk["con"], "color": lnk["color"],
-            "total": total, "bots": bots, "tgBot": tg, "fbBot": fb,
-            "metaCrl": meta, "otherBot": other_bot, "real": real,
-        })
-        bot_pct = round(bots / total * 100) if total else 0
-        print(f"  FRAUD {lnk['model']}: {total} clicks in last {FRAUD_LOOKBACK_DAYS}d, {bots} bots ({bot_pct}%)")
+/* ── Reorder models ── */
+function moveModel(conKey,id,dir){
+  var links=conKey==='YR'?LINKS.YR:conKey==='TD'?LINKS.TD:conKey==='VL'?LINKS.VL:LINKS.OL;
+  var idx=links.findIndex(function(l){return l.id===id;});
+  if(idx<0)return;
+  var ni=idx+dir;
+  if(ni<0||ni>=links.length)return;
+  var tmp=links[idx];links[idx]=links[ni];links[ni]=tmp;
+  ALL=LINKS.YR.concat(LINKS.TD).concat(LINKS.VL);
+  saveOrder(conKey,links);
+  renderAll();
+}
+function saveOrder(con,links){
+  try{localStorage.setItem('tm_order_'+con.toLowerCase(),JSON.stringify(links.map(function(l){return l.id;})));}catch(e){}
+}
+function loadOrders(){
+  ['YR','TD','VL','OL'].forEach(function(con){
+    try{
+      var saved=localStorage.getItem('tm_order_'+con.toLowerCase());
+      if(!saved)return;
+      var ids=JSON.parse(saved);
+      var arr=con==='YR'?LINKS.YR:con==='TD'?LINKS.TD:con==='VL'?LINKS.VL:LINKS.OL;
+      var ordered=[];
+      ids.forEach(function(id){var l=arr.find(function(x){return x.id===id;});if(l)ordered.push(l);});
+      arr.forEach(function(l){if(!ordered.find(function(x){return x.id===l.id;}))ordered.push(l);});
+      if(con==='YR')LINKS.YR=ordered;else if(con==='TD')LINKS.TD=ordered;else if(con==='VL')LINKS.VL=ordered;else LINKS.OL=ordered;
+    }catch(e){}
+  });
+  ALL=LINKS.YR.concat(LINKS.TD).concat(LINKS.VL);
+}
+function initRowDrag(bodyId,conKey){
+  var tbody=document.getElementById(bodyId);
+  if(!tbody)return;
+  var dragRow=null;
+  tbody.querySelectorAll('tr.tr-main').forEach(function(row){
+    var rowId=row.id.replace('row-','');
+    if(locked[rowId])return; // locked — skip
+    row.addEventListener('dragstart',function(e){
+      dragRow=this;
+      e.dataTransfer.effectAllowed='move';
+      setTimeout(function(){if(dragRow)dragRow.style.opacity='0.45';},0);
+    });
+    row.addEventListener('dragend',function(){
+      this.style.opacity='';
+      tbody.querySelectorAll('.drag-over').forEach(function(r){r.classList.remove('drag-over');});
+      dragRow=null;
+    });
+    row.addEventListener('dragover',function(e){
+      e.preventDefault();
+      var tid=this.id.replace('row-','');
+      if(!locked[tid])this.classList.add('drag-over');
+    });
+    row.addEventListener('dragleave',function(){this.classList.remove('drag-over');});
+    row.addEventListener('drop',function(e){
+      e.preventDefault();
+      this.classList.remove('drag-over');
+      var tid=this.id.replace('row-','');
+      if(!dragRow||dragRow===this||locked[tid])return;
+      var rows=Array.from(tbody.querySelectorAll('tr.tr-main'));
+      var si=rows.indexOf(dragRow),di=rows.indexOf(this);
+      if(si<0||di<0)return;
+      var links=conKey==='YR'?LINKS.YR:conKey==='TD'?LINKS.TD:conKey==='VL'?LINKS.VL:LINKS.OL;
+      var item=links.splice(si,1)[0];
+      links.splice(di,0,item);
+      ALL=LINKS.YR.concat(LINKS.TD).concat(LINKS.VL);
+      saveOrder(conKey,links);
+      renderAll();
+    });
+  });
+}
 
-        # live geo/device breakdown — same 30-day click data, no extra API calls
-        live_geo = aggregate_geo(clicks)
-        live_devs = aggregate_devices(clicks)
+function renderAll(){renderKPI();renderTable(LINKS.YR,'yrBody','YR');renderTable(LINKS.TD,'tdBody','TD');renderTable(LINKS.VL,'vlBody','VL');renderTable(LINKS.OL,'olBody','OL');renderBudget();renderAnalytics();updateRefs();initRowDrag('yrBody','YR');initRowDrag('tdBody','TD');initRowDrag('vlBody','VL');initRowDrag('olBody','OL');updateConLockUI();applyConCollapse();}
 
-        # most recent rows for the detail log (API returns newest-first)
-        for c in clicks[:FRAUD_LOG_PER_LINK]:
-            fclicks_list.append({
-                "t": fmt_click_time(c.get("created_at", "")),
-                "con": lnk["con"],
-                "model": lnk["model"],
-                "lid": lnk["id"],
-                "ip": c.get("ip_address") or "—",
-                "ua": c.get("user_agent") or c.get("browser_name") or "Unknown",
-                "id": c.get("id", ""),
-                "country": c.get("country_code") or "Other",
-                "device": c.get("browser_device_type") or "Other",
-                "gross": c.get("gross_clicks", 1),
-                "bot": bool(c.get("is_bot")),
-            })
-    except Exception as e:
-        print(f"  FRAUD ERR {lnk['model']}: {e}")
-    GEO[lnk["id"]] = live_geo
-    DEVS[lnk["id"]] = live_devs
+loadLS();
+document.getElementById('name-yr').innerText=names.yr;
+document.getElementById('name-td').innerText=names.td;
+document.getElementById('name-vl').innerText=names.vl;
+document.getElementById('anTarget').value=anTarget.toFixed(2);
+buildThead('th-yr');buildThead('th-td');buildThead('th-vl');buildThead('th-ol');
+(function(){
+  var el=document.querySelector('.upd'); if(!el) return;
+  var iso=el.getAttribute('data-utc'); if(!iso) return;
+  var d=new Date(iso); if(isNaN(d.getTime())) return;
+  var p2=function(n){return String(n).padStart(2,'0');};
+  el.textContent=p2(d.getDate())+'.'+p2(d.getMonth()+1)+'.'+d.getFullYear()+', '+p2(d.getHours())+':'+p2(d.getMinutes());
+  el.title='UTC: '+iso.replace('T',' ').replace('Z',' UTC');
+})();
+// ── THEME TOGGLE ────────────────────────────────────────────────────────────
+var MOON_ICON='<circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 0 0 16 6 6 0 0 1 0-16z"/>';
+var SUN_ICON='<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+function applyTheme(dark){
+  document.documentElement.classList.toggle('dark',dark);
+  var icon=document.getElementById('themeIcon');
+  var lbl=document.getElementById('themeLabel');
+  if(icon)icon.innerHTML=dark?MOON_ICON:SUN_ICON;
+  if(lbl)lbl.textContent=dark?'Dark':'Light';
+  try{localStorage.setItem('tm_theme',dark?'dark':'light');}catch(e){}
+}
+function toggleTheme(){applyTheme(!document.documentElement.classList.contains('dark'));}
+(function(){
+  var saved=null;try{saved=localStorage.getItem('tm_theme');}catch(e){}
+  applyTheme(saved==='dark');
+})();
+loadConCollapsed();loadConLocks();loadConOrder();loadLocks();loadOrders();renderAll();renderAnalysis();initConDrag();
 
-    try:
-        url = f"https://app.onlyfansapi.com/api/smart-links/{lnk['id']}/stats"
-        data = api_get(url)
-        s = data["data"]["summary"]
-        daily_raw = data["data"].get("daily_metrics", [])
-        daily = [
-            {"d": d["timestamp"], "c": d["clicks"], "s": d["subs"], "sp": d["spenders"], "r": d["revenue"]}
-            for d in daily_raw
-            if d["clicks"] or d["subs"] or d["revenue"]
-        ]
-        entry = {
-            "id": lnk["id"],
-            "startDate": lnk["startDate"],
-            "model": lnk["model"],
-            "color": lnk["color"],
-            "offer": lnk["offer"],
-            "clicks": s["clicks_total"],
-            "subs": s["subs_total"],
-            "spenders": s["spenders_total"],
-            "revenue": s["revenue_total"],
-            "msgs3": MSGS3.get(lnk["id"], 0),
-            "geo": GEO.get(lnk["id"], []),
-            "devs": DEVS.get(lnk["id"], []),
-            "daily": daily,
-        }
-        print(f"  OK {lnk['model']} ({lnk['con']}): {entry['clicks']} clicks / {entry['subs']} subs / ${entry['revenue']:.2f}")
-        if lnk["con"] == "YR":
-            yr_links.append(entry)
-        elif lnk["con"] == "TD":
-            td_links.append(entry)
-        elif lnk["con"] == "VL":
-            vl_links.append(entry)
-        else:
-            ol_links.append(entry)
-    except Exception as e:
-        print(f"  ERR {lnk['model']}: {e}")
-        errors.append(lnk["model"])
-
-if errors:
-    print(f"WARNING: {len(errors)} link(s) failed: {', '.join(errors)}")
-
-if not yr_links and not td_links and not vl_links and not ol_links:
-    print("FATAL: no data fetched for any link. Aborting without touching index.html.")
-    raise SystemExit(1)
-
-# keep only the most recent N rows across all links, newest first
-fclicks_list.sort(key=lambda r: r["t"], reverse=True)
-fclicks_list = fclicks_list[:FRAUD_LOG_MAX_TOTAL]
-
-
-# ── BUILD LINKS JS ──────────────────────────────────────────────────────────
-def link_to_js(l):
-    geo = json.dumps(l["geo"]).replace('"c"', 'c').replace('"n"', 'n').replace('"s"', 's')
-    devs = json.dumps(l["devs"]).replace('"d"', 'd').replace('"n"', 'n').replace('"s"', 's').replace('"cl"', 'cl')
-    daily = json.dumps(l["daily"]).replace('"d"', 'd').replace('"c"', 'c').replace('"s"', 's').replace('"sp"', 'sp').replace('"r"', 'r')
-    return (
-        f"    {{id:'{l['id']}',startDate:'{l['startDate']}',model:'{l['model']}',"
-        f"color:'{l['color']}',offer:'{l['offer']}',clicks:{l['clicks']},subs:{l['subs']},"
-        f"spenders:{l['spenders']},revenue:{l['revenue']},msgs3:{l['msgs3']},"
-        f"geo:{geo},devs:{devs},daily:{daily}}}"
-    )
-
-links_js = "var LINKS = {\n  YR: [\n"
-links_js += ",\n".join(link_to_js(l) for l in yr_links)
-links_js += "\n  ],\n  OL: [\n"
-links_js += ",\n".join(link_to_js(l) for l in ol_links)
-links_js += "\n  ],\n  TD: [\n"
-links_js += ",\n".join(link_to_js(l) for l in td_links)
-links_js += "\n  ],\n  VL: [\n"
-links_js += ",\n".join(link_to_js(l) for l in vl_links)
-links_js += "\n  ]\n};"
-
-def to_js_array(items, unquote_keys):
-    """json.dumps an array of dicts, then strip quotes from known object keys
-    so it matches the unquoted-key JS object literal style used elsewhere
-    in this file (var LINKS, GEO, DEVS)."""
-    s = json.dumps(items)
-    for k in unquote_keys:
-        s = re.sub(r'"%s":' % re.escape(k), '%s:' % k, s)
-    return s
-
-FSTATS_KEYS = ["model", "con", "color", "total", "bots", "tgBot", "fbBot", "metaCrl", "otherBot", "real"]
-FCLICKS_KEYS = ["t", "con", "model", "lid", "ip", "ua", "id", "country", "device", "gross", "bot"]
-fstats_js = to_js_array(fstats_list, FSTATS_KEYS)
-fclicks_js = to_js_array(fclicks_list, FCLICKS_KEYS)
-
-# ── UPDATE index.html ───────────────────────────────────────────────────────
-with open("index.html", encoding="utf-8") as f:
-    html = f.read()
-
-html = re.sub(r'var LINKS = \{.*?\};\nvar ALL', links_js + '\nvar ALL', html, flags=re.DOTALL)
-html = re.sub(r'var FSTATS=\[.*?\];', f'var FSTATS={fstats_js};', html, flags=re.DOTALL)
-html = re.sub(r'var FCLICKS=\[.*?\];', f'var FCLICKS={fclicks_js};', html, flags=re.DOTALL)
-
-# Update the visible date badge in the header — text + machine-readable UTC timestamp
-html = re.sub(
-    r'<span class="upd"[^>]*>[^<]*</span>',
-    f'<span class="upd" data-utc="{iso_str}">{date_str}</span>',
-    html,
-)
-
-with open("index.html", "w", encoding="utf-8") as f:
-    f.write(html)
-
-print(f"index.html updated successfully ({len(fclicks_list)} fraud log rows, {len(fstats_list)} model bot-stats). Netlify will redeploy automatically after git push.")
+</script>
+</body>
+</html>
