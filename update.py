@@ -10,6 +10,8 @@ Netlify API directly anymore — committing index.html is enough.
 import os
 import json
 import re
+import time
+import urllib.error
 import urllib.request
 from datetime import datetime, timezone, timedelta
 
@@ -60,17 +62,42 @@ FRAUD_LOG_PER_LINK = 30    # most recent rows per link kept for the detail click
 FRAUD_LOG_MAX_TOTAL = 250  # total rows kept in the click log across all links (keeps file size sane)
 
 # ── FETCH OF API ────────────────────────────────────────────────────────────
+API_RETRY_ATTEMPTS = 3        # total tries per request before giving up
+API_RETRY_BACKOFF = 2         # seconds; doubles each retry (2s, 4s, 8s...)
+
 def api_get(url):
-    req = urllib.request.Request(
-        url,
-        headers={
-            "Authorization": f"Bearer {OF_API_KEY}",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-            "Accept": "application/json",
-        },
-    )
-    with urllib.request.urlopen(req, timeout=30) as r:
-        return json.loads(r.read())
+    last_err = None
+    for attempt in range(1, API_RETRY_ATTEMPTS + 1):
+        req = urllib.request.Request(
+            url,
+            headers={
+                "Authorization": f"Bearer {OF_API_KEY}",
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+                "Accept": "application/json",
+            },
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=30) as r:
+                return json.loads(r.read())
+        except urllib.error.HTTPError as e:
+            last_err = e
+            # Only retry on transient server-side errors (5xx). 4xx (bad request,
+            # unauthorized, not found) won't fix themselves — fail immediately.
+            if e.code >= 500 and attempt < API_RETRY_ATTEMPTS:
+                wait = API_RETRY_BACKOFF * (2 ** (attempt - 1))
+                print(f"    retry {attempt}/{API_RETRY_ATTEMPTS} after HTTP {e.code}, waiting {wait}s...")
+                time.sleep(wait)
+                continue
+            raise
+        except (urllib.error.URLError, TimeoutError) as e:
+            last_err = e
+            if attempt < API_RETRY_ATTEMPTS:
+                wait = API_RETRY_BACKOFF * (2 ** (attempt - 1))
+                print(f"    retry {attempt}/{API_RETRY_ATTEMPTS} after {e}, waiting {wait}s...")
+                time.sleep(wait)
+                continue
+            raise
+    raise last_err
 
 now_utc = datetime.now(timezone.utc)
 date_str = now_utc.strftime("%d.%m.%Y, %H:%M UTC")  # e.g. "22.06.2026, 14:32 UTC"
