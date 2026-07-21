@@ -21,7 +21,8 @@ OF_API_KEY = os.environ["OF_API_KEY"]
 SMART_LINKS = [
     # ── Yuriy (YR) ──────────────────────────────────────────────
     {"id": "01KW9BHKKESX6F9STJGD5B4NJX", "model": "Octocuro",     "con": "YR", "color": "#7c3aed", "startDate": "2026-07-02", "offer": "Free Trial"},
-    {"id": "01KX3RM06SKCY288Q50JAWQSG4", "model": "E.Momota", "con": "YR", "color": "#e879a9", "startDate": "2026-07-08", "offer": "Free Trial"},
+    {"id": "01KXZ9NKWGEBA7RJ6Z18FMPNP5", "model": "E.Momota", "con": "YR", "color": "#e879a9", "startDate": "2026-07-08", "offer": "Free Trial"},
+    {"id": "01KXP5EBQREFPM5XAXA150MPF1", "model": "Nana", "con": "YR", "color": "#0d9488", "startDate": "2026-07-21", "offer": "Free Trial"},
     # ── Traffic Devils (TD) ─────────────────────────────────────
     {"id": "01KSPXD1G50JJQ6XYRPR1FD5GN", "model": "Octokura",      "con": "TD", "color": "#0ea5e9", "startDate": "2026-05-29", "offer": "Free Trial"},
     {"id": "01KT4EBCJW9Z7T73718FWF1GNS", "model": "Nancy Ace",     "con": "TD", "color": "#f59e0b", "startDate": "2026-06-02", "offer": "Free Trial"},
@@ -37,6 +38,8 @@ SMART_LINKS = [
     # ── Ocean Lead (OL) ─────────────────────────────────────────
     {"id": "01KW9Q2FDB4BCWHMKANRJHQ5J7", "model": "E.Momota", "con": "OL", "color": "#e879a9", "startDate": "2026-07-02", "offer": "Free Trial"},
     {"id": "01KW9S98BTQQPYC47G4AFXGFEV", "model": "Octocuro",     "con": "OL", "color": "#0891b2", "startDate": "2026-07-02", "offer": "Free Trial"},
+    # ── Nikita (NK) ───────────────────────────────────────────────
+    {"id": "01KXQPSMKG4YNGZ7FH4DPR8YCG", "model": "Octocuro", "con": "NK", "color": "#c2410c", "startDate": "2026-07-21", "offer": "Free Trial"},
 ]
 
 GEO = {}   # populated live below from the same 30-day click data used for Fraud Detection
@@ -44,10 +47,12 @@ DEVS = {}  # populated live below from the same 30-day click data used for Fraud
 
 MSGS3 = {
     "01KW9BHKKESX6F9STJGD5B4NJX": 0,   # Octocuro (YR)
-    "01KX3RM06SKCY288Q50JAWQSG4": 0,   # E.Momota (YR)
+    "01KXZ9NKWGEBA7RJ6Z18FMPNP5": 0,   # E.Momota (YR)
+    "01KXP5EBQREFPM5XAXA150MPF1": 0,   # Nana (YR) — new
     "01KX14VNRVBHW5KRPVDD7G4K1X": 0,   # E.Momota s1 (TD) — new
     "01KW9Q2FDB4BCWHMKANRJHQ5J7": 0,   # Emira Momota (OL) — new
     "01KW9S98BTQQPYC47G4AFXGFEV": 0,   # Octocuro (OL) — new
+    "01KXQPSMKG4YNGZ7FH4DPR8YCG": 0,   # Octocuro (NK) — new
     "01KSPXD1G50JJQ6XYRPR1FD5GN": 17, "01KT4EBCJW9Z7T73718FWF1GNS": 8,
     "01KT736WE764G4R2JMXQEYHHXD": 1,  "01KTXGC29Y0KVDMDWJDYTA5KW7": 1,
     "01KTBSPQBQVM77HR203WHWXZB7": 7,  "01KTBS3785SXY0E748E84XFQP7": 11,
@@ -187,6 +192,7 @@ td_links = []
 vl_links = []
 yr_links = []
 ol_links = []
+nk_links = []
 errors = []
 fstats_list = []
 fclicks_list = []
@@ -272,8 +278,10 @@ for lnk in SMART_LINKS:
             td_links.append(entry)
         elif lnk["con"] == "VL":
             vl_links.append(entry)
-        else:
+        elif lnk["con"] == "OL":
             ol_links.append(entry)
+        else:
+            nk_links.append(entry)
     except Exception as e:
         print(f"  ERR {lnk['model']}: {e}")
         errors.append(lnk["model"])
@@ -281,7 +289,7 @@ for lnk in SMART_LINKS:
 if errors:
     print(f"WARNING: {len(errors)} link(s) failed: {', '.join(errors)}")
 
-if not yr_links and not td_links and not vl_links and not ol_links:
+if not yr_links and not td_links and not vl_links and not ol_links and not nk_links:
     print("FATAL: no data fetched for any link. Aborting without touching index.html.")
     raise SystemExit(1)
 
@@ -310,6 +318,8 @@ links_js += "\n  ],\n  TD: [\n"
 links_js += ",\n".join(link_to_js(l) for l in td_links)
 links_js += "\n  ],\n  VL: [\n"
 links_js += ",\n".join(link_to_js(l) for l in vl_links)
+links_js += "\n  ],\n  NK: [\n"
+links_js += ",\n".join(link_to_js(l) for l in nk_links)
 links_js += "\n  ]\n};"
 
 def to_js_array(items, unquote_keys):
