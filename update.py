@@ -40,11 +40,20 @@ SMART_LINKS = [
     {"id": "01KW9S98BTQQPYC47G4AFXGFEV", "model": "Octocuro",     "con": "OL", "color": "#0891b2", "startDate": "2026-07-02", "offer": "Free Trial"},
     # ── Nikita (NK) ───────────────────────────────────────────────
     {"id": "01KXQPSMKG4YNGZ7FH4DPR8YCG", "model": "Octocuro", "con": "NK", "color": "#c2410c", "startDate": "2026-07-21", "offer": "Free Trial"},
+    {"id": "01KYPTFCMK67FKYB36YX14FFTK", "model": "Nana", "con": "NK", "color": "#0891b2", "startDate": "2026-07-29", "offer": "Free Trial"},
 ]
 
 GEO = {}   # populated live below from the same 30-day click data used for Fraud Detection
 DEVS = {}  # populated live below from the same 30-day click data used for Fraud Detection
+MSGS3_LIVE = {}  # populated live below via listSmartLinkFans (min_messages_sent_by_fan=3);
+                 # MSGS3 dict below is now only a fallback if a single link's live fetch fails
 
+# MSGS3 below is now a FALLBACK ONLY, used solely if a link's live
+# fetch_msgs3_count() call fails for some reason during a given run. The
+# real, always-current value comes from MSGS3_LIVE (see fetch_msgs3_count()
+# and the main loop below). Values here are frozen snapshots from whenever
+# they were last manually recorded, and are NOT auto-maintained — that's
+# exactly the bug this fallback exists to protect against, not fix.
 MSGS3 = {
     "01KW9BHKKESX6F9STJGD5B4NJX": 0,   # Octocuro (YR)
     "01KXZ9NKWGEBA7RJ6Z18FMPNP5": 0,   # E.Momota (YR)
@@ -53,6 +62,7 @@ MSGS3 = {
     "01KW9Q2FDB4BCWHMKANRJHQ5J7": 0,   # Emira Momota (OL) — new
     "01KW9S98BTQQPYC47G4AFXGFEV": 0,   # Octocuro (OL) — new
     "01KXQPSMKG4YNGZ7FH4DPR8YCG": 0,   # Octocuro (NK) — new
+    "01KYPTFCMK67FKYB36YX14FFTK": 0,   # Nana (NK) — new
     "01KSPXD1G50JJQ6XYRPR1FD5GN": 17, "01KT4EBCJW9Z7T73718FWF1GNS": 8,
     "01KT736WE764G4R2JMXQEYHHXD": 1,  "01KTXGC29Y0KVDMDWJDYTA5KW7": 1,
     "01KTBSPQBQVM77HR203WHWXZB7": 7,  "01KTBS3785SXY0E748E84XFQP7": 11,
@@ -151,6 +161,34 @@ def fetch_clicks(link_id):
               f"({len(rows)} clicks) — true volume may be higher, bot-rate stats are a lower bound.")
     return rows
 
+MSGS3_MAX_PAGES = 20  # safety cap: 20 * 100 = 2,000 fans max per link per run
+
+def fetch_msgs3_count(link_id):
+    """Live count of fans with 3+ messages sent, via listSmartLinkFans
+    (min_messages_sent_by_fan=3). This is the metric shown as '3F+ msg' in
+    the dashboard — previously frozen in a hand-maintained MSGS3 dict that
+    was never updated for new models/contractors. Paginates the same way
+    fetch_clicks() does."""
+    count = 0
+    offset = 0
+    hit_cap = True
+    for _ in range(MSGS3_MAX_PAGES):
+        url = (
+            f"https://app.onlyfansapi.com/api/smart-links/{link_id}/fans"
+            f"?min_messages_sent_by_fan=3&limit=100&offset={offset}"
+        )
+        data = api_get(url)
+        rows = data["data"]["rows"]
+        count += len(rows)
+        if len(rows) < 100:
+            hit_cap = False
+            break
+        offset += 100
+    if hit_cap:
+        print(f"  MSGS3 WARNING: link {link_id} hit the {MSGS3_MAX_PAGES}-page cap "
+              f"({count} fans) — true count may be higher.")
+    return count
+
 DEVICE_COLORS = {"Mobile": "#1570ef", "Bot": "#f04438", "Desktop": "#10b981", "Tablet": "#f59e0b", "Other": "#98a2b3"}
 
 def aggregate_geo(clicks, top_n=4):
@@ -246,6 +284,15 @@ for lnk in SMART_LINKS:
     GEO[lnk["id"]] = live_geo
     DEVS[lnk["id"]] = live_devs
 
+    # ── LIVE 3F+ msg count (fans with 3+ messages sent), via listSmartLinkFans ──
+    try:
+        msgs3_count = fetch_msgs3_count(lnk["id"])
+        print(f"  MSGS3 {lnk['model']}: {msgs3_count} fans with 3+ messages")
+    except Exception as e:
+        msgs3_count = MSGS3.get(lnk["id"], 0)
+        print(f"  MSGS3 ERR {lnk['model']}: {e} (falling back to last known value: {msgs3_count})")
+    MSGS3_LIVE[lnk["id"]] = msgs3_count
+
     try:
         url = f"https://app.onlyfansapi.com/api/smart-links/{lnk['id']}/stats"
         data = api_get(url)
@@ -266,7 +313,7 @@ for lnk in SMART_LINKS:
             "subs": s["subs_total"],
             "spenders": s["spenders_total"],
             "revenue": s["revenue_total"],
-            "msgs3": MSGS3.get(lnk["id"], 0),
+            "msgs3": MSGS3_LIVE.get(lnk["id"], MSGS3.get(lnk["id"], 0)),
             "geo": GEO.get(lnk["id"], []),
             "devs": DEVS.get(lnk["id"], []),
             "daily": daily,
