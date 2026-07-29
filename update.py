@@ -387,7 +387,7 @@ fclicks_js = to_js_array(fclicks_list, FCLICKS_KEYS)
 with open("index.html", encoding="utf-8") as f:
     html = f.read()
 
-html = re.sub(r'var LINKS = \{.*?\};\nvar ALL', links_js + '\nvar ALL', html, flags=re.DOTALL)
+html = re.sub(r'var LINKS = \{.*?\n\};', links_js, html, count=1, flags=re.DOTALL)
 html = re.sub(r'var FSTATS=\[.*?\];', f'var FSTATS={fstats_js};', html, flags=re.DOTALL)
 html = re.sub(r'var FCLICKS=\[.*?\];', f'var FCLICKS={fclicks_js};', html, flags=re.DOTALL)
 
