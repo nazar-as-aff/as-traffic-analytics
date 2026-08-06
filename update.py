@@ -41,6 +41,8 @@ SMART_LINKS = [
     # ── Nikita (NK) ───────────────────────────────────────────────
     {"id": "01KXQPSMKG4YNGZ7FH4DPR8YCG", "model": "Octocuro", "con": "NK", "color": "#c2410c", "startDate": "2026-07-21", "offer": "Free Trial"},
     {"id": "01KYPTFCMK67FKYB36YX14FFTK", "model": "Nana", "con": "NK", "color": "#0891b2", "startDate": "2026-07-29", "offer": "Free Trial"},
+    {"id": "01KYS8YHE920MN33ZQWH04BGX7", "model": "Octocuro s1", "con": "NK", "color": "#be185d", "startDate": "2026-08-01", "offer": "Free Trial"},
+    {"id": "01KZB9G1JVPTP14ZTD8AR3DRY9", "model": "Octocuro s2", "con": "NK", "color": "#4d7c0f", "startDate": "2026-08-06", "offer": "Free Trial"},
 ]
 
 GEO = {}   # populated live below from the same 30-day click data used for Fraud Detection
@@ -63,6 +65,8 @@ MSGS3 = {
     "01KW9S98BTQQPYC47G4AFXGFEV": 0,   # Octocuro (OL) — new
     "01KXQPSMKG4YNGZ7FH4DPR8YCG": 0,   # Octocuro (NK) — new
     "01KYPTFCMK67FKYB36YX14FFTK": 0,   # Nana (NK) — new
+    "01KYS8YHE920MN33ZQWH04BGX7": 0,   # Octocuro s1 (NK) — new
+    "01KZB9G1JVPTP14ZTD8AR3DRY9": 0,   # Octocuro s2 (NK) — new
     "01KSPXD1G50JJQ6XYRPR1FD5GN": 17, "01KT4EBCJW9Z7T73718FWF1GNS": 8,
     "01KT736WE764G4R2JMXQEYHHXD": 1,  "01KTXGC29Y0KVDMDWJDYTA5KW7": 1,
     "01KTBSPQBQVM77HR203WHWXZB7": 7,  "01KTBS3785SXY0E748E84XFQP7": 11,
