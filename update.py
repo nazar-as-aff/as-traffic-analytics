@@ -41,7 +41,7 @@ SMART_LINKS = [
     {"id": "01KW9S98BTQQPYC47G4AFXGFEV", "model": "Octocuro",     "con": "OL", "color": "#0891b2", "startDate": "2026-07-02", "offer": "Free Trial"},
     # ── Nikita (NK) ───────────────────────────────────────────────
     {"id": "01KXQPSMKG4YNGZ7FH4DPR8YCG", "model": "Octocuro", "con": "NK", "color": "#c2410c", "startDate": "2026-07-21", "offer": "Free Trial"},
-    {"id": "01KYPTFCMK67FKYB36YX14FFTK", "model": "Nana", "con": "NK", "color": "#0891b2", "startDate": "2026-07-29", "offer": "Free Trial"},
+    {"id": "01KZB9G1JVPTP14ZTD8AR3DRY9", "model": "Octocuro s0", "con": "NK", "color": "#0891b2", "startDate": "2026-07-29", "offer": "Free Trial"},
     {"id": "01KYS8YHE920MN33ZQWH04BGX7", "model": "Octocuro s1", "con": "NK", "color": "#be185d", "startDate": "2026-08-01", "offer": "Free Trial"},
     {"id": "01M0A37J3GCYE2T8ZBN9DTSRTP", "model": "Octocuro s2", "con": "NK", "color": "#4d7c0f", "startDate": "2026-08-06", "offer": "Free Trial"},
     # ── Hilltopads (HT) ─────────────────────────────────────────
@@ -70,7 +70,7 @@ MSGS3 = {
     "01KW9Q2FDB4BCWHMKANRJHQ5J7": 0,   # Emira Momota (OL) — new
     "01KW9S98BTQQPYC47G4AFXGFEV": 0,   # Octocuro (OL) — new
     "01KXQPSMKG4YNGZ7FH4DPR8YCG": 0,   # Octocuro (NK) — new
-    "01KYPTFCMK67FKYB36YX14FFTK": 0,   # Nana (NK) — new
+    "01KZB9G1JVPTP14ZTD8AR3DRY9": 0,   # Octocuro s0 (NK) — new
     "01KYS8YHE920MN33ZQWH04BGX7": 0,   # Octocuro s1 (NK) — new
     "01M0A37J3GCYE2T8ZBN9DTSRTP": 0,   # Octocuro s2 (NK) — new
     "01M07Y82DH6S10YNMR0T4KGSCF": 0,   # N.Ace Popunder (HT) — new
