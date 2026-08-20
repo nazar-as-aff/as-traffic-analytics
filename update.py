@@ -22,7 +22,8 @@ SMART_LINKS = [
     # ── Yuriy (YR) ──────────────────────────────────────────────
     {"id": "01KW9BHKKESX6F9STJGD5B4NJX", "model": "Octocuro",     "con": "YR", "color": "#7c3aed", "startDate": "2026-07-02", "offer": "Free Trial"},
     {"id": "01KXZ9NKWGEBA7RJ6Z18FMPNP5", "model": "E.Momota", "con": "YR", "color": "#e879a9", "startDate": "2026-07-08", "offer": "Free Trial"},
-    {"id": "01KXP5EBQREFPM5XAXA150MPF1", "model": "Nana", "con": "YR", "color": "#0d9488", "startDate": "2026-07-21", "offer": "Free Trial"},
+    {"id": "01KZXTCY5MKND3KJCPVBK92ZFR", "model": "Nana", "con": "YR", "color": "#0d9488", "startDate": "2026-07-21", "offer": "Free Trial"},
+    {"id": "01KZRFXXSZSGE9TFFKVFSJE7CV", "model": "Octocuro s1", "con": "YR", "color": "#9333ea", "startDate": "2026-08-10", "offer": "Free Trial"},
     # ── Traffic Devils (TD) ─────────────────────────────────────
     {"id": "01KSPXD1G50JJQ6XYRPR1FD5GN", "model": "Octokura",      "con": "TD", "color": "#0ea5e9", "startDate": "2026-05-29", "offer": "Free Trial"},
     {"id": "01KT4EBCJW9Z7T73718FWF1GNS", "model": "Nancy Ace",     "con": "TD", "color": "#f59e0b", "startDate": "2026-06-02", "offer": "Free Trial"},
@@ -42,7 +43,11 @@ SMART_LINKS = [
     {"id": "01KXQPSMKG4YNGZ7FH4DPR8YCG", "model": "Octocuro", "con": "NK", "color": "#c2410c", "startDate": "2026-07-21", "offer": "Free Trial"},
     {"id": "01KYPTFCMK67FKYB36YX14FFTK", "model": "Nana", "con": "NK", "color": "#0891b2", "startDate": "2026-07-29", "offer": "Free Trial"},
     {"id": "01KYS8YHE920MN33ZQWH04BGX7", "model": "Octocuro s1", "con": "NK", "color": "#be185d", "startDate": "2026-08-01", "offer": "Free Trial"},
-    {"id": "01KZB9G1JVPTP14ZTD8AR3DRY9", "model": "Octocuro s2", "con": "NK", "color": "#4d7c0f", "startDate": "2026-08-06", "offer": "Free Trial"},
+    {"id": "01M0A37J3GCYE2T8ZBN9DTSRTP", "model": "Octocuro s2", "con": "NK", "color": "#4d7c0f", "startDate": "2026-08-06", "offer": "Free Trial"},
+    # ── Hilltopads (HT) ─────────────────────────────────────────
+    {"id": "01M07Y82DH6S10YNMR0T4KGSCF", "model": "N.Ace (Popunder)", "con": "HT", "color": "#059669", "startDate": "2026-08-11", "offer": "Free Trial"},
+    {"id": "01M07Y91F1KJHSNTGJ1ZWEPQYR", "model": "N.Ace (Banner)", "con": "HT", "color": "#0891b2", "startDate": "2026-08-11", "offer": "Free Trial"},
+    {"id": "01M07YARDAZBQ2HWNPS35PDJY0", "model": "N.Ace (Video)", "con": "HT", "color": "#7c3aed", "startDate": "2026-08-11", "offer": "Free Trial"},
 ]
 
 GEO = {}   # populated live below from the same 30-day click data used for Fraud Detection
@@ -59,14 +64,18 @@ MSGS3_LIVE = {}  # populated live below via listSmartLinkFans (min_messages_sent
 MSGS3 = {
     "01KW9BHKKESX6F9STJGD5B4NJX": 0,   # Octocuro (YR)
     "01KXZ9NKWGEBA7RJ6Z18FMPNP5": 0,   # E.Momota (YR)
-    "01KXP5EBQREFPM5XAXA150MPF1": 0,   # Nana (YR) — new
+    "01KZXTCY5MKND3KJCPVBK92ZFR": 0,   # Nana (YR) — new
+    "01KZRFXXSZSGE9TFFKVFSJE7CV": 0,   # Octocuro s1 (YR) — new
     "01KX14VNRVBHW5KRPVDD7G4K1X": 0,   # E.Momota s1 (TD) — new
     "01KW9Q2FDB4BCWHMKANRJHQ5J7": 0,   # Emira Momota (OL) — new
     "01KW9S98BTQQPYC47G4AFXGFEV": 0,   # Octocuro (OL) — new
     "01KXQPSMKG4YNGZ7FH4DPR8YCG": 0,   # Octocuro (NK) — new
     "01KYPTFCMK67FKYB36YX14FFTK": 0,   # Nana (NK) — new
     "01KYS8YHE920MN33ZQWH04BGX7": 0,   # Octocuro s1 (NK) — new
-    "01KZB9G1JVPTP14ZTD8AR3DRY9": 0,   # Octocuro s2 (NK) — new
+    "01M0A37J3GCYE2T8ZBN9DTSRTP": 0,   # Octocuro s2 (NK) — new
+    "01M07Y82DH6S10YNMR0T4KGSCF": 0,   # N.Ace Popunder (HT) — new
+    "01M07Y91F1KJHSNTGJ1ZWEPQYR": 0,   # N.Ace Banner (HT) — new
+    "01M07YARDAZBQ2HWNPS35PDJY0": 0,   # N.Ace Video (HT) — new
     "01KSPXD1G50JJQ6XYRPR1FD5GN": 17, "01KT4EBCJW9Z7T73718FWF1GNS": 8,
     "01KT736WE764G4R2JMXQEYHHXD": 1,  "01KTXGC29Y0KVDMDWJDYTA5KW7": 1,
     "01KTBSPQBQVM77HR203WHWXZB7": 7,  "01KTBS3785SXY0E748E84XFQP7": 11,
@@ -235,6 +244,13 @@ vl_links = []
 yr_links = []
 ol_links = []
 nk_links = []
+ht_links = []
+# Single source of truth for contractor routing — add new contractors here
+# (and to SMART_LINKS above) and everything else, including the fatal-empty
+# check and the LINKS object build below, picks it up automatically. No more
+# hardcoded if/elif chains to forget a branch in.
+CONTRACTOR_LISTS = {"YR": yr_links, "TD": td_links, "VL": vl_links, "OL": ol_links, "NK": nk_links, "HT": ht_links}
+ht_links = []
 errors = []
 fstats_list = []
 fclicks_list = []
@@ -323,16 +339,7 @@ for lnk in SMART_LINKS:
             "daily": daily,
         }
         print(f"  OK {lnk['model']} ({lnk['con']}): {entry['clicks']} clicks / {entry['subs']} subs / ${entry['revenue']:.2f}")
-        if lnk["con"] == "YR":
-            yr_links.append(entry)
-        elif lnk["con"] == "TD":
-            td_links.append(entry)
-        elif lnk["con"] == "VL":
-            vl_links.append(entry)
-        elif lnk["con"] == "OL":
-            ol_links.append(entry)
-        else:
-            nk_links.append(entry)
+        CONTRACTOR_LISTS[lnk["con"]].append(entry)
     except Exception as e:
         print(f"  ERR {lnk['model']}: {e}")
         errors.append(lnk["model"])
@@ -340,7 +347,7 @@ for lnk in SMART_LINKS:
 if errors:
     print(f"WARNING: {len(errors)} link(s) failed: {', '.join(errors)}")
 
-if not yr_links and not td_links and not vl_links and not ol_links and not nk_links:
+if not any(CONTRACTOR_LISTS.values()):
     print("FATAL: no data fetched for any link. Aborting without touching index.html.")
     raise SystemExit(1)
 
@@ -361,17 +368,10 @@ def link_to_js(l):
         f"geo:{geo},devs:{devs},daily:{daily}}}"
     )
 
-links_js = "var LINKS = {\n  YR: [\n"
-links_js += ",\n".join(link_to_js(l) for l in yr_links)
-links_js += "\n  ],\n  OL: [\n"
-links_js += ",\n".join(link_to_js(l) for l in ol_links)
-links_js += "\n  ],\n  TD: [\n"
-links_js += ",\n".join(link_to_js(l) for l in td_links)
-links_js += "\n  ],\n  VL: [\n"
-links_js += ",\n".join(link_to_js(l) for l in vl_links)
-links_js += "\n  ],\n  NK: [\n"
-links_js += ",\n".join(link_to_js(l) for l in nk_links)
-links_js += "\n  ]\n};"
+links_js = "var LINKS = {\n" + ",\n".join(
+    "  %s: [\n%s\n  ]" % (con, ",\n".join(link_to_js(l) for l in lst))
+    for con, lst in CONTRACTOR_LISTS.items()
+) + "\n};"
 
 def to_js_array(items, unquote_keys):
     """json.dumps an array of dicts, then strip quotes from known object keys
